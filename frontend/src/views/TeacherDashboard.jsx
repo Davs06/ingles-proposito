@@ -856,6 +856,7 @@ export default function TeacherDashboard({
               >
                 <option value="multiple_choice">Múltipla Escolha</option>
                 <option value="fill_in_blank">Preenchimento de Lacuna</option>
+                <option value="discursive">Questão Discursiva / Resposta Aberta (Turmas Avançadas)</option>
               </select>
             </div>
 
@@ -863,7 +864,7 @@ export default function TeacherDashboard({
               <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Pergunta / Enunciado</label>
               <input
                 type="text"
-                placeholder="Ex: Qual a tradução correta para 'Good Morning'?"
+                placeholder={exerciseType === 'discursive' ? "Ex: Descreva em 3 frases como foi seu último final de semana em inglês." : "Ex: Qual a tradução correta para 'Good Morning'?"}
                 className="input-field"
                 value={exerciseQuestion}
                 onChange={(e) => setExerciseQuestion(e.target.value)}
@@ -894,10 +895,12 @@ export default function TeacherDashboard({
             )}
 
             <div>
-              <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Resposta Correta</label>
-              <input
-                type="text"
-                placeholder="Digite exatamente a resposta esperada"
+              <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                {exerciseType === 'discursive' ? 'Resposta Modelo / Gabarito de Referência' : 'Resposta Correta'}
+              </label>
+              <textarea
+                rows={exerciseType === 'discursive' ? 3 : 1}
+                placeholder={exerciseType === 'discursive' ? "Ex: Exemplo de resposta esperada do aluno para verificação..." : "Digite exatamente a resposta esperada"}
                 className="input-field"
                 value={exerciseCorrectAnswer}
                 onChange={(e) => setExerciseCorrectAnswer(e.target.value)}
@@ -905,6 +908,7 @@ export default function TeacherDashboard({
                 style={{ marginTop: '4px' }}
               />
             </div>
+
 
             <div>
               <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Explicação Didática (Feedback)</label>

@@ -13,10 +13,12 @@ EXCEPTION
 END $$;
 
 DO $$ BEGIN
-    CREATE TYPE exercise_type AS ENUM ('multiple_choice', 'fill_in_blank');
+    CREATE TYPE exercise_type AS ENUM ('multiple_choice', 'fill_in_blank', 'discursive');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
+ALTER TYPE exercise_type ADD VALUE IF NOT EXISTS 'discursive';
+
 
 -- 2. TABELA DE PERFIS DE USUÁRIOS
 CREATE TABLE IF NOT EXISTS public.profiles (

@@ -84,7 +84,11 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
           Exercício {currentIndex + 1} de {exercises.length}
         </div>
         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-          {currentEx.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Preenchimento de Lacuna'}
+          {currentEx.type === 'multiple_choice' 
+            ? 'Múltipla Escolha' 
+            : currentEx.type === 'discursive' 
+              ? 'Questão Discursiva (Avançado)' 
+              : 'Preenchimento de Lacuna'}
         </span>
       </div>
 
@@ -159,6 +163,29 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
           </div>
         )}
 
+        {currentEx.type === 'discursive' && (
+          <div style={{ marginBottom: '16px' }}>
+            <textarea
+              placeholder="Escreva sua resposta completa em inglês..."
+              className="input-field"
+              rows={4}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              disabled={submitted}
+              required
+              style={{ lineHeight: '1.5' }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                Questão Discursiva (Turma Avançada)
+              </span>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {inputText.trim() ? inputText.trim().split(/\s+/).filter(Boolean).length : 0} palavra(s)
+              </span>
+            </div>
+          </div>
+        )}
+
         {!submitted ? (
           <button 
             type="submit" 
@@ -175,7 +202,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: '10px',
-                padding: '12px',
+                padding: '14px',
                 borderRadius: 'var(--radius-md)',
                 background: isCorrect ? 'var(--accent-success-bg)' : 'rgba(239, 68, 68, 0.12)',
                 border: `1px solid ${isCorrect ? 'var(--accent-success)' : '#ef4444'}`
@@ -186,13 +213,25 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
               ) : (
                 <XCircle size={20} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
               )}
-              <div>
-                <strong style={{ fontSize: '0.9rem', color: isCorrect ? 'var(--accent-success)' : '#ef4444' }}>
-                  {isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta.'}
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '0.9rem', color: isCorrect ? 'var(--accent-success)' : '#ef4444', display: 'block', marginBottom: '4px' }}>
+                  {currentEx.type === 'discursive'
+                    ? 'Resposta Registrada!'
+                    : isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta.'}
                 </strong>
+
+                {currentEx.type === 'discursive' && (
+                  <div style={{ background: 'var(--bg-secondary)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', margin: '8px 0' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', fontWeight: '700', textTransform: 'uppercase' }}>Resposta de Referência do Professor:</span>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-primary)', marginTop: '2px', fontStyle: 'italic' }}>
+                      "{currentEx.correct_answer}"
+                    </p>
+                  </div>
+                )}
+
                 {currentEx.explanation && (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.3' }}>
-                    {currentEx.explanation}
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.35' }}>
+                    <strong>Explicação / Feedback:</strong> {currentEx.explanation}
                   </p>
                 )}
               </div>
@@ -203,6 +242,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
             </button>
           </div>
         )}
+
       </form>
     </div>
   );

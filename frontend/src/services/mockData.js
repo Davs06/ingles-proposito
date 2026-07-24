@@ -53,7 +53,16 @@ export const INITIAL_TRACKS = [
                 options: ['I go to school every day', 'I went yesterday', 'I will fly tomorrow', 'I am sleeping now'],
                 correct_answer: 'I go to school every day',
                 explanation: 'Expressões de frequência como "every day" acompanham o Present Simple.'
+              },
+              {
+                id: 'e5555555-5555-5555-5555-555555555555',
+                type: 'discursive',
+                question: 'Descreva em inglês como é a sua rotina matinal em 2 ou 3 frases (ex: horário que acorda, café da manhã, etc.).',
+                options: [],
+                correct_answer: 'Sample answer: I wake up at 7:00 AM every day. I drink coffee and eat bread for breakfast, then I study English.',
+                explanation: 'A resposta deve utilizar verbos no Present Simple (ex: wake up, drink, eat, study).'
               }
+
             ]
           }
         ]
