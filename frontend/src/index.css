@@ -299,8 +299,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Navigation Bars */
 .top-navbar {
-  min-height: 64px;
-  padding: 10px 16px;
+  min-height: 60px;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -310,14 +310,63 @@ h1, h2, h3, h4, h5, h6 {
   position: sticky;
   top: 0;
   z-index: 50;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
 }
+
+.brand-title-heading {
+  font-size: 1rem;
+  line-height: 1.1;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* Notification Modal Responsive Positioning */
+.notification-dropdown-panel {
+  position: absolute;
+  top: 44px;
+  right: 0;
+  width: 320px;
+  max-width: 90vw;
+  padding: 14px;
+  z-index: 1000;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-color);
+}
+
+@media (max-width: 640px) {
+  .hide-mobile, .nav-role-switcher {
+    display: none !important;
+  }
+  .top-navbar {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .brand-title-heading {
+    font-size: 0.82rem !important;
+  }
+  .brand-subtitle {
+    display: none !important;
+  }
+  .notification-dropdown-panel {
+    position: fixed;
+    top: 60px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: calc(100vw - 24px);
+  }
+}
+
 
 @media (min-width: 768px) {
   .top-navbar {
     padding: 0 24px;
+    min-height: 64px;
   }
 }
+
+
 
 /* Mobile Bottom Nav (PWA Mobile-First) */
 .mobile-bottom-nav {

@@ -138,17 +138,19 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
           IP
         </div>
         <div style={{ minWidth: 0 }}>
-          <h1 style={{ fontSize: '1.05rem', lineHeight: '1.1', fontWeight: '800', whiteSpace: 'nowrap' }}>
+          <h1 className="brand-title-heading">
             Inglês com <span style={{ color: 'var(--accent-primary)' }}>Propósito</span>
           </h1>
-          <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700', whiteSpace: 'nowrap' }}>
+          <div className="brand-subtitle" style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700', whiteSpace: 'nowrap' }}>
             PIB São Miguel Paulista
           </div>
         </div>
+
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-        <div style={{ background: 'var(--bg-secondary)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)', display: 'flex', gap: '2px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative', flexShrink: 0 }}>
+        <div className="nav-role-switcher" style={{ background: 'var(--bg-secondary)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)', display: 'flex', gap: '2px' }}>
+
           <button
             onClick={() => navigate('/aluno')}
             className={`btn btn-sm ${role === 'student' ? 'btn-primary' : 'btn-secondary'}`}
@@ -201,19 +203,8 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
 
           {/* Notifications Dropdown Panel */}
           {showNotifPanel && (
-            <div
-              className="glass-panel animate-fade-in"
-              style={{
-                position: 'absolute',
-                top: '44px',
-                right: '0',
-                width: '320px',
-                padding: '14px',
-                zIndex: 100,
-                boxShadow: '0 15px 35px -5px rgba(0,0,0,0.4)',
-                border: '1px solid var(--border-color)'
-              }}
-            >
+            <div className="glass-panel animate-fade-in notification-dropdown-panel">
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)' }}>
                 <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>
                   Notificações ({unreadCount} não lidas)
