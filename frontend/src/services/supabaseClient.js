@@ -96,7 +96,12 @@ export const uploadFileToSupabase = async (file, bucketName = 'lessons-pdf') => 
       });
 
     if (error) {
-      console.warn('Aviso no Supabase Storage Upload:', error.message);
+      console.warn(`Aviso no Supabase Storage (${bucketName}):`, error.message);
+      // Se for arquivo grande, o DataURL pode dar estouro de memória, avisa o usuário sobre o bucket
+      if (file.size > 8 * 1024 * 1024) {
+        throw new Error(`Bucket '${bucketName}' não encontrado ou sem permissão no Supabase. Crie o bucket público no Supabase Dashboard > Storage.`);
+      }
+      // Fallback para FileReader (arquivos menores)
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
@@ -110,7 +115,8 @@ export const uploadFileToSupabase = async (file, bucketName = 'lessons-pdf') => 
 
     return publicUrlData.publicUrl;
   } catch (err) {
-    console.warn('Erro ao processar arquivo no Supabase Storage:', err);
+    console.warn('Erro no upload de arquivo:', err);
+    if (err.message?.includes('Bucket')) throw err;
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -118,6 +124,7 @@ export const uploadFileToSupabase = async (file, bucketName = 'lessons-pdf') => 
     });
   }
 };
+
 
 
 

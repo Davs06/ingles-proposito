@@ -163,6 +163,26 @@ ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Leitura global de materiais" ON public.materials FOR SELECT USING (true);
 CREATE POLICY "Gestão de materiais por docentes" ON public.materials FOR ALL USING (public.is_teacher_or_admin());
 
+-- ==========================================
+-- SUPABASE STORAGE BUCKETS (gallery-photos & lessons-pdf)
+-- ==========================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('lessons-pdf', 'lessons-pdf', true),
+       ('gallery-photos', 'gallery-photos', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Políticas de acesso público para o bucket lessons-pdf
+CREATE POLICY "Leitura pública lessons-pdf" ON storage.objects FOR SELECT USING (bucket_id = 'lessons-pdf');
+CREATE POLICY "Upload permitido lessons-pdf" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'lessons-pdf');
+CREATE POLICY "Exclusão permitida lessons-pdf" ON storage.objects FOR DELETE USING (bucket_id = 'lessons-pdf');
+
+-- Políticas de acesso público para o bucket gallery-photos
+CREATE POLICY "Leitura pública gallery-photos" ON storage.objects FOR SELECT USING (bucket_id = 'gallery-photos');
+CREATE POLICY "Upload permitido gallery-photos" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'gallery-photos');
+CREATE POLICY "Exclusão permitida gallery-photos" ON storage.objects FOR DELETE USING (bucket_id = 'gallery-photos');
+
+
 
 -- Auxiliar function para checar se o usuário é Professor/Admin
 CREATE OR REPLACE FUNCTION public.is_teacher_or_admin()

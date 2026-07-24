@@ -42,14 +42,14 @@ export default function TeacherDashboard({
   const [exerciseExplanation, setExerciseExplanation] = useState('');
   const [targetLessonForEx, setTargetLessonForEx] = useState('');
 
-  // Form states for Photo creation & Direct Supabase Storage Upload
+  // Form states for Photo creation & Direct Supabase Storage Upload (Batch / Multiple Files)
   const [newPhotoTitle, setNewPhotoTitle] = useState('');
   const [newPhotoDesc, setNewPhotoDesc] = useState('');
   const [newPhotoCategory, setNewPhotoCategory] = useState('Visita Americana');
   const [uploadSource, setUploadSource] = useState('file'); // 'file' | 'url'
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
-  const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
+  const [selectedPhotoFiles, setSelectedPhotoFiles] = useState([]);
+  const [photoPreviews, setPhotoPreviews] = useState([]);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Form states for PDF Booklet & Materials Upload
@@ -86,98 +86,138 @@ export default function TeacherDashboard({
 
   const allLessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
 
-  // Handlers
+  // Handlers for Batch Photo Upload
   const handlePhotoFileSelect = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione um arquivo de imagem válido (JPG, PNG, WebP).');
-      return;
+    const validFiles = [];
+    const previews = [];
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`O arquivo "${file.name}" não é uma imagem válida.`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`O arquivo "${file.name}" excede 10 MB.`);
+        continue;
+      }
+      validFiles.push(file);
+      previews.push({
+        file,
+        url: URL.createObjectURL(file)
+      });
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('O tamanho da imagem não deve exceder 10 MB.');
-      return;
-    }
+    setSelectedPhotoFiles((prev) => [...prev, ...validFiles]);
+    setPhotoPreviews((prev) => [...prev, ...previews]);
+  };
 
-    setSelectedPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+  const handleRemoveSelectedFile = (index) => {
+    setSelectedPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleAddPhoto = async (e) => {
     e.preventDefault();
-    if (!newPhotoTitle) return;
 
-    let finalImageUrl = newPhotoUrl;
-
-    if (uploadSource === 'file') {
-      if (!selectedPhotoFile) {
-        toast.error('Por favor, selecione um arquivo de imagem do seu dispositivo.');
+    if (uploadSource === 'url') {
+      if (!newPhotoTitle || !newPhotoUrl) {
+        toast.error('Por favor, digite o título e a URL da imagem.');
         return;
       }
-      setIsUploadingPhoto(true);
+
+      const photoPayload = {
+        title: newPhotoTitle,
+        description: newPhotoDesc,
+        image_url: newPhotoUrl,
+        category: newPhotoCategory,
+        event_date: new Date().toISOString().split('T')[0]
+      };
+
+      let newPhoto = { id: 'f' + Date.now().toString().slice(-11), ...photoPayload };
+
+      if (isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.from('gallery_photos').insert([photoPayload]).select().single();
+          if (data) newPhoto = data;
+        } catch (err) {
+          console.warn('Erro ao salvar no banco Supabase:', err);
+        }
+      }
+
+      setGalleryItems([newPhoto, ...galleryItems]);
+      setNewPhotoTitle('');
+      setNewPhotoDesc('');
+      setNewPhotoUrl('');
+      toast.success('Foto enviada com sucesso!');
+      return;
+    }
+
+    // Upload Source: Batch File Upload
+    if (selectedPhotoFiles.length === 0) {
+      toast.error('Por favor, selecione ao menos uma imagem do seu dispositivo.');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    const toastId = toast.loading(`Enviando ${selectedPhotoFiles.length} foto(s) para o acervo...`);
+
+    const newPhotos = [];
+
+    for (let i = 0; i < selectedPhotoFiles.length; i++) {
+      const file = selectedPhotoFiles[i];
+      let imageUrl = '';
+
       try {
-        finalImageUrl = await uploadImageToSupabase(selectedPhotoFile, 'gallery-photos');
+        imageUrl = await uploadImageToSupabase(file, 'gallery-photos');
       } catch (err) {
-        console.warn('Erro no upload:', err);
-        // Fallback local FileReader
-        finalImageUrl = await new Promise((resolve) => {
+        imageUrl = await new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
-          reader.readAsDataURL(selectedPhotoFile);
+          reader.readAsDataURL(file);
         });
-      } finally {
-        setIsUploadingPhoto(false);
       }
-    } else {
-      if (!newPhotoUrl) {
-        toast.error('Por favor, digite a URL da imagem.');
-        return;
-      }
-    }
 
-    const photoPayload = {
-      title: newPhotoTitle,
-      description: newPhotoDesc,
-      image_url: finalImageUrl,
-      category: newPhotoCategory,
-      event_date: new Date().toISOString().split('T')[0]
-    };
+      const fileTitle = selectedPhotoFiles.length === 1
+        ? (newPhotoTitle || file.name.split('.')[0])
+        : `${newPhotoTitle || 'Foto Intercâmbio'} (${i + 1})`;
 
-    let newPhoto = {
-      id: 'f' + Date.now().toString().slice(-11),
-      ...photoPayload
-    };
+      const photoPayload = {
+        title: fileTitle,
+        description: newPhotoDesc,
+        image_url: imageUrl,
+        category: newPhotoCategory,
+        event_date: new Date().toISOString().split('T')[0]
+      };
 
-    // Salva a nova foto na tabela public.gallery_photos do Supabase
-    if (isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabase
-          .from('gallery_photos')
-          .insert([photoPayload])
-          .select()
-          .single();
+      let photoObj = { id: 'f' + (Date.now() + i).toString().slice(-11), ...photoPayload };
 
-        if (data) {
-          newPhoto = data;
+      if (isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.from('gallery_photos').insert([photoPayload]).select().single();
+          if (data) photoObj = data;
+        } catch (dbErr) {
+          console.warn('Aviso ao salvar foto no banco:', dbErr);
         }
-      } catch (dbErr) {
-        console.warn('Aviso ao salvar no banco Supabase:', dbErr);
       }
+
+      newPhotos.push(photoObj);
     }
 
-    setGalleryItems([newPhoto, ...galleryItems]);
+    setGalleryItems([...newPhotos, ...galleryItems]);
+    setSelectedPhotoFiles([]);
+    setPhotoPreviews([]);
     setNewPhotoTitle('');
     setNewPhotoDesc('');
-    setNewPhotoUrl('');
-    setSelectedPhotoFile(null);
-    setPhotoPreview(null);
-    toast.success('Foto enviada e salva no acervo com sucesso!');
+    setIsUploadingPhoto(false);
+    toast.dismiss(toastId);
+    toast.success(`${newPhotos.length} foto(s) enviada(s) para a galeria com sucesso!`);
   };
 
-
   const handleDeletePhoto = async (photoId) => {
+
     if (!confirm('Deseja remover esta foto da galeria?')) return;
 
     if (isSupabaseConfigured() && typeof photoId === 'string' && photoId.includes('-')) {
@@ -425,8 +465,9 @@ export default function TeacherDashboard({
       toast.success('Apostila/Material enviado com sucesso!');
     } catch (err) {
       console.error('Erro no upload de material:', err);
-      toast.error('Ocorreu um erro ao enviar o arquivo.');
+      toast.error(err.message || 'Ocorreu um erro ao enviar o arquivo.');
     } finally {
+
       setIsUploadingMat(false);
     }
   };
@@ -1032,17 +1073,17 @@ export default function TeacherDashboard({
                 </div>
               </div>
 
-              {/* Upload Source: File Picker */}
+              {/* Upload Source: File Picker (Batch / Multiple Support) */}
               {uploadSource === 'file' ? (
                 <div>
                   <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>
-                    Selecione a Imagem (PNG, JPG, WebP — Max 10MB)
+                    Selecione uma ou mais Imagens (PNG, JPG, WebP — Max 10MB cada)
                   </label>
                   <div
                     style={{
                       border: '2px dashed var(--border-color)',
                       borderRadius: 'var(--radius-md)',
-                      padding: '20px',
+                      padding: '24px 16px',
                       textAlign: 'center',
                       background: 'var(--bg-secondary)',
                       cursor: 'pointer',
@@ -1052,6 +1093,7 @@ export default function TeacherDashboard({
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handlePhotoFileSelect}
                       style={{
                         position: 'absolute',
@@ -1059,32 +1101,72 @@ export default function TeacherDashboard({
                         opacity: 0,
                         cursor: 'pointer',
                         width: '100%',
-                        height: '100%'
+                        height: '100%',
+                        zIndex: 2
                       }}
                     />
                     
-                    {photoPreview ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-                        <img 
-                          src={photoPreview} 
-                          alt="Pré-visualização" 
-                          style={{ maxHeight: '180px', borderRadius: 'var(--radius-md)', objectFit: 'contain', border: '1px solid var(--border-color)' }} 
-                        />
-                        <span style={{ fontSize: '0.78rem', color: 'var(--accent-success)', fontWeight: '600' }}>
-                          ✓ Arquivo selecionado: {selectedPhotoFile?.name} ({(selectedPhotoFile?.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Clique na área para escolher outra imagem</span>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
-                        <Upload size={32} color="var(--accent-primary)" />
-                        <strong style={{ fontSize: '0.88rem', color: 'var(--text-primary)' }}>Clique ou arraste um arquivo de imagem aqui</strong>
-                        <span style={{ fontSize: '0.75rem' }}>Será salvo diretamente no armazenamento do Supabase Storage</span>
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
+                      <Upload size={32} color="var(--accent-primary)" />
+                      <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                        Clique ou arraste várias imagens para envio em lote (Batch Upload)
+                      </strong>
+                      <span style={{ fontSize: '0.75rem' }}>Suporta múltiplos arquivos simultâneos gravados no Supabase Storage S3</span>
+                    </div>
                   </div>
+
+                  {/* Selected Batch Thumbnails Queue */}
+                  {photoPreviews.length > 0 && (
+                    <div style={{ marginTop: '14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--accent-success)' }}>
+                          ✓ {photoPreviews.length} imagem(ns) selecionada(s) para envio:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedPhotoFiles([]); setPhotoPreviews([]); }}
+                          className="btn btn-secondary btn-sm"
+                          style={{ fontSize: '0.72rem', padding: '3px 8px', color: '#ef4444' }}
+                        >
+                          Limpar Lista
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))', gap: '8px' }}>
+                        {photoPreviews.map((prev, idx) => (
+                          <div key={idx} style={{ position: 'relative', height: '80px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+                            <img src={prev.url} alt={prev.file.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleRemoveSelectedFile(idx); }}
+                              style={{
+                                position: 'absolute',
+                                top: '4px',
+                                right: '4px',
+                                background: 'rgba(0,0,0,0.75)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '50%',
+                                width: '22px',
+                                height: '22px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                zIndex: 10
+                              }}
+                              title="Remover imagem"
+                            >
+                              <X size={13} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
+
                 <div>
                   <label style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>URL Direta da Imagem</label>
                   <input
@@ -1114,15 +1196,18 @@ export default function TeacherDashboard({
               <button 
                 type="submit" 
                 className="btn btn-primary" 
-                disabled={isUploadingPhoto || (uploadSource === 'file' && !selectedPhotoFile)}
-                style={{ alignSelf: 'flex-start', minWidth: '180px' }}
+                disabled={isUploadingPhoto || (uploadSource === 'file' && selectedPhotoFiles.length === 0)}
+                style={{ alignSelf: 'flex-start', minWidth: '220px' }}
               >
                 {isUploadingPhoto ? (
-                  <>Enviando para o Supabase...</>
+                  <>Enviando Lote para o Supabase...</>
+                ) : uploadSource === 'file' && selectedPhotoFiles.length > 1 ? (
+                  <><Upload size={15} /> Enviar {selectedPhotoFiles.length} Fotos em Lote</>
                 ) : (
                   <><Upload size={15} /> Cadastrar Foto na Galeria</>
                 )}
               </button>
+
             </form>
           </div>
 
