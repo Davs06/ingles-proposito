@@ -176,7 +176,85 @@ export default function App() {
     }
   }, []);
 
+  // Load gallery photos from Supabase DB on startup
+  useEffect(() => {
+    async function loadGalleryFromDb() {
+      if (!isSupabaseConfigured()) return;
+      try {
+        const { data, error } = await supabase
+          .from('gallery_photos')
+          .select('*')
+          .order('created_at', { ascending: false });
 
+        if (data && data.length > 0) {
+          setGalleryItems(data);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar galeria do Supabase:', err);
+      }
+    }
+    loadGalleryFromDb();
+  }, []);
+
+  // Load tracks & lessons from Supabase DB on startup
+  useEffect(() => {
+    async function loadTracksFromDb() {
+      if (!isSupabaseConfigured()) return;
+      try {
+        const { data: dbTracks } = await supabase
+          .from('tracks')
+          .select('*, modules(*, lessons(*, exercises(*)))')
+          .order('order_index', { ascending: true });
+
+        if (dbTracks && dbTracks.length > 0) {
+          const formattedTracks = dbTracks.map((t) => ({
+            ...t,
+            modules: (t.modules || [])
+              .sort((a, b) => a.order_index - b.order_index)
+              .map((m) => ({
+                ...m,
+                lessons: (m.lessons || [])
+                  .sort((a, b) => a.order_index - b.order_index)
+                  .map((l) => ({
+                    ...l,
+                    exercises: (l.exercises || []).sort((a, b) => a.order_index - b.order_index)
+                  }))
+              }))
+          }));
+          setTracks(formattedTracks);
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar trilhas do Supabase:', err);
+      }
+    }
+    loadTracksFromDb();
+  }, []);
+
+  // Load student progress from Supabase DB on login
+  useEffect(() => {
+    async function loadUserProgressFromDb() {
+      if (!isSupabaseConfigured() || !user?.id) return;
+      try {
+        const { data: dbProgress } = await supabase
+          .from('user_progress')
+          .select('lesson_id, completed')
+          .eq('user_id', user.id);
+
+        if (dbProgress && dbProgress.length > 0) {
+          const progressMap = {};
+          dbProgress.forEach((item) => {
+            if (item.completed) {
+              progressMap[item.lesson_id] = true;
+            }
+          });
+          setUserProgress((prev) => ({ ...prev, ...progressMap }));
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar progresso:', err);
+      }
+    }
+    loadUserProgressFromDb();
+  }, [user?.id]);
 
   const handleLogout = async () => {
     if (isSupabaseConfigured()) {
@@ -201,12 +279,30 @@ export default function App() {
     navigate('/aluno/aula');
   };
 
-  const handleCompleteLesson = (lessonId) => {
+  const handleCompleteLesson = async (lessonId) => {
+    const nextState = !userProgress[lessonId];
     setUserProgress((prev) => ({
       ...prev,
-      [lessonId]: !prev[lessonId]
+      [lessonId]: nextState
     }));
+
+    if (isSupabaseConfigured() && user?.id) {
+      try {
+        await supabase.from('user_progress').upsert(
+          {
+            user_id: user.id,
+            lesson_id: lessonId,
+            completed: nextState,
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: 'user_id,lesson_id' }
+        );
+      } catch (err) {
+        console.warn('Erro ao salvar progresso no banco:', err);
+      }
+    }
   };
+
 
   // Helper to map teacher URL paths to activeTab
   const pathParts = location.pathname.split('/').filter(Boolean);

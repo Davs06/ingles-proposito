@@ -5,7 +5,7 @@ import {
   Sparkles, CheckCircle2, ChevronRight, BarChart3, ShieldCheck, Download,
   Upload, FileImage, Loader2
 } from 'lucide-react';
-import { uploadImageToSupabase } from '../services/supabaseClient';
+import { uploadImageToSupabase, supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 export default function TeacherDashboard({ 
   tracks, 
@@ -112,8 +112,7 @@ export default function TeacherDashboard({
       }
     }
 
-    const newPhoto = {
-      id: 'f' + Date.now().toString().slice(-11),
+    const photoPayload = {
       title: newPhotoTitle,
       description: newPhotoDesc,
       image_url: finalImageUrl,
@@ -121,21 +120,205 @@ export default function TeacherDashboard({
       event_date: new Date().toISOString().split('T')[0]
     };
 
+    let newPhoto = {
+      id: 'f' + Date.now().toString().slice(-11),
+      ...photoPayload
+    };
+
+    // Salva a nova foto na tabela public.gallery_photos do Supabase
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase
+          .from('gallery_photos')
+          .insert([photoPayload])
+          .select()
+          .single();
+
+        if (data) {
+          newPhoto = data;
+        }
+      } catch (dbErr) {
+        console.warn('Aviso ao salvar no banco Supabase:', dbErr);
+      }
+    }
+
     setGalleryItems([newPhoto, ...galleryItems]);
     setNewPhotoTitle('');
     setNewPhotoDesc('');
     setNewPhotoUrl('');
     setSelectedPhotoFile(null);
     setPhotoPreview(null);
-    alert('Foto adicionada com sucesso à Galeria!');
+    alert('Foto enviada e salva no acervo com sucesso!');
   };
 
-
-
-  const handleDeletePhoto = (photoId) => {
+  const handleDeletePhoto = async (photoId) => {
     if (!confirm('Deseja remover esta foto da galeria?')) return;
+
+    if (isSupabaseConfigured() && typeof photoId === 'string' && photoId.includes('-')) {
+      try {
+        await supabase.from('gallery_photos').delete().eq('id', photoId);
+      } catch (err) {
+        console.warn('Erro ao excluir foto do Supabase:', err);
+      }
+    }
+
     setGalleryItems(galleryItems.filter((p) => p.id !== photoId));
   };
+
+  const handleCreateTrack = async (e) => {
+    e.preventDefault();
+    if (!newTrackTitle) return;
+
+    const trackPayload = {
+      title: newTrackTitle,
+      description: newTrackDesc,
+      level: newTrackLevel,
+      order_index: tracks.length + 1,
+      icon_name: 'book-open',
+      is_published: true
+    };
+
+    let newTrack = {
+      id: 't_' + Date.now(),
+      ...trackPayload,
+      modules: []
+    };
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data } = await supabase.from('tracks').insert([trackPayload]).select().single();
+        if (data) {
+          newTrack = { ...data, modules: [] };
+          const { data: defaultMod } = await supabase.from('modules').insert([{
+            track_id: data.id,
+            title: 'Módulo 1: Introdução & Fundamentos',
+            description: 'Módulo inicial da trilha',
+            order_index: 1
+          }]).select().single();
+          if (defaultMod) {
+            newTrack.modules = [{ ...defaultMod, lessons: [] }];
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao salvar trilha no banco:', err);
+      }
+    } else {
+      newTrack.modules = [{
+        id: 'm_' + Date.now(),
+        track_id: newTrack.id,
+        title: 'Módulo 1: Introdução & Fundamentos',
+        description: 'Módulo inicial da trilha',
+        order_index: 1,
+        lessons: []
+      }];
+    }
+
+    setTracks([...tracks, newTrack]);
+    setNewTrackTitle('');
+    setNewTrackDesc('');
+    setShowAddTrackModal(false);
+    alert('Nova trilha criada com sucesso!');
+  };
+
+  const handleCreateLesson = async (e) => {
+    e.preventDefault();
+    if (!newLessonTitle || !selectedModuleId) return;
+
+    const lessonPayload = {
+      module_id: selectedModuleId,
+      title: newLessonTitle,
+      description: newLessonDesc,
+      youtube_id: newLessonYoutubeId || 'dQw4w9WgXcQ',
+      pdf_url: newLessonPdfUrl || null,
+      duration_minutes: Number(newLessonDuration) || 10,
+      order_index: 99
+    };
+
+    let newLesson = {
+      id: 'l_' + Date.now(),
+      ...lessonPayload,
+      exercises: []
+    };
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data } = await supabase.from('lessons').insert([lessonPayload]).select().single();
+        if (data) {
+          newLesson = { ...data, exercises: [] };
+        }
+      } catch (err) {
+        console.warn('Erro ao salvar aula no banco:', err);
+      }
+    }
+
+    setTracks(tracks.map(t => ({
+      ...t,
+      modules: t.modules.map(m => {
+        if (m.id === selectedModuleId) {
+          return { ...m, lessons: [...m.lessons, newLesson] };
+        }
+        return m;
+      })
+    })));
+
+    setNewLessonTitle('');
+    setNewLessonDesc('');
+    setNewLessonYoutubeId('');
+    setNewLessonPdfUrl('');
+    setShowAddLessonModal(false);
+    alert('Nova aula adicionada com sucesso!');
+  };
+
+  const handleCreateExercise = async (e) => {
+    e.preventDefault();
+    if (!exerciseQuestion || !targetLessonForEx) return;
+
+    const exPayload = {
+      lesson_id: targetLessonForEx,
+      type: exerciseType,
+      question: exerciseQuestion,
+      options: exerciseType === 'multiple_choice' ? exerciseOptions.filter(Boolean) : [],
+      correct_answer: exerciseCorrectAnswer,
+      explanation: exerciseExplanation,
+      order_index: 99
+    };
+
+    let newEx = {
+      id: 'e_' + Date.now(),
+      ...exPayload
+    };
+
+    if (isSupabaseConfigured()) {
+      try {
+        const { data } = await supabase.from('exercises').insert([exPayload]).select().single();
+        if (data) {
+          newEx = data;
+        }
+      } catch (err) {
+        console.warn('Erro ao salvar exercício no banco:', err);
+      }
+    }
+
+    setTracks(tracks.map(t => ({
+      ...t,
+      modules: t.modules.map(m => ({
+        ...m,
+        lessons: m.lessons.map(l => {
+          if (l.id === targetLessonForEx) {
+            return { ...l, exercises: [...(l.exercises || []), newEx] };
+          }
+          return l;
+        })
+      }))
+    })));
+
+    setExerciseQuestion('');
+    setExerciseCorrectAnswer('');
+    setExerciseExplanation('');
+    alert('Novo exercício adicionado com sucesso!');
+  };
+
+
 
   // Environment Config Data
   const environmentsList = [
