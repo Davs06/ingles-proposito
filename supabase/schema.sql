@@ -23,11 +23,37 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     email TEXT NOT NULL UNIQUE,
     full_name TEXT,
+    docente BOOLEAN NOT NULL DEFAULT false, -- Campo booleano de indicação de docente/professor
     role user_role NOT NULL DEFAULT 'student',
     avatar_url TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- GATILHO AUTOMÁTICO: Popula a tabela public.profiles ao criar usuário em auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, avatar_url, docente, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
+    false,      -- Sempre por padrão docente = false
+    'student'  -- Sempre por padrão role = student
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
 
 -- 3. TRILHAS DE APRENDIZADO
 CREATE TABLE IF NOT EXISTS public.tracks (
@@ -128,10 +154,11 @@ RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND role IN ('teacher', 'admin')
+    WHERE id = auth.uid() AND (docente = true OR role IN ('teacher', 'admin'))
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
 
 -- Profiles: Leitura liberada para autênticados, Edição do próprio perfil
 CREATE POLICY "Leitura de perfis autorizada" ON public.profiles FOR SELECT USING (true);
@@ -210,4 +237,19 @@ CREATE POLICY "Upload de fotos por docentes" ON storage.objects FOR INSERT WITH 
 
 CREATE POLICY "Leitura pública de PDFs" ON storage.objects FOR SELECT USING (bucket_id = 'lessons-pdf');
 CREATE POLICY "Upload de PDFs por docentes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'lessons-pdf');
+
+-- ==========================================
+-- POPULAR PERFIS PARA USUÁRIOS QUE JÁ LOGARAM
+-- ==========================================
+INSERT INTO public.profiles (id, email, full_name, avatar_url, docente, role)
+SELECT 
+  id, 
+  email, 
+  COALESCE(raw_user_meta_data->>'full_name', raw_user_meta_data->>'name', split_part(email, '@', 1)),
+  COALESCE(raw_user_meta_data->>'avatar_url', raw_user_meta_data->>'picture'),
+  false,
+  'student'::user_role
+FROM auth.users
+ON CONFLICT (id) DO NOTHING;
+
 

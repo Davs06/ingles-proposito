@@ -13,61 +13,63 @@ import TeacherDashboard from './views/TeacherDashboard';
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 import { INITIAL_TRACKS, INITIAL_GALLERY } from './services/mockData';
 
-// Configurable list of authorized teacher/admin email addresses
-const AUTHORIZED_TEACHER_EMAILS = (
-  import.meta.env.VITE_TEACHER_EMAILS ||
-  'professor@pibsmp.org,admin@pibsmp.org,professor.google@pibsmp.org'
-)
-  .split(',')
-  .map((e) => e.trim().toLowerCase());
-
-function determineUserRole(supabaseUser, requestedRole = null) {
-  if (!supabaseUser || !supabaseUser.email) return 'student';
-  const email = supabaseUser.email.toLowerCase();
-  const metaRole = supabaseUser.user_metadata?.role;
-
-  // Grant teacher role if explicitly listed in AUTHORIZED_TEACHER_EMAILS,
-  // or if email contains keywords ('professor'/'admin'),
-  // or if user authenticated selecting Teacher profile (metaRole === 'teacher')
-  const isTeacher =
-    AUTHORIZED_TEACHER_EMAILS.includes(email) ||
-    email.includes('professor') ||
-    email.includes('admin') ||
-    metaRole === 'teacher' ||
-    supabaseUser.user_metadata?.is_teacher === true;
-
-  if (isTeacher) {
-    return 'teacher';
-  }
-
-  return 'student';
-}
-
-
-function buildUserProfile(supabaseUser, fallbackRole = null) {
+// Carrega o perfil do usuário a partir da tabela 'profiles' do banco de dados Supabase
+async function fetchUserProfileFromDb(supabaseUser) {
   if (!supabaseUser) return null;
   const meta = supabaseUser.user_metadata || {};
 
+  let isDocente = false;
+  let dbFullName = null;
+  let dbAvatarUrl = null;
+
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('docente, role, full_name, avatar_url')
+      .eq('id', supabaseUser.id)
+      .maybeSingle();
+
+    if (profile) {
+      isDocente = profile.docente === true || profile.role === 'teacher' || profile.role === 'admin';
+      dbFullName = profile.full_name;
+      dbAvatarUrl = profile.avatar_url;
+    }
+  } catch (err) {
+    console.warn('Consulta à tabela profiles:', err);
+  }
+
+  // Fallback para metadados ou keywords no e-mail caso não haja registro na tabela
+  const email = (supabaseUser.email || '').toLowerCase();
+  if (!isDocente) {
+    isDocente =
+      meta.role === 'teacher' ||
+      meta.docente === true ||
+      meta.is_teacher === true ||
+      email.includes('professor') ||
+      email.includes('admin');
+  }
+
   const fullName =
+    dbFullName ||
     meta.full_name ||
     meta.name ||
     meta.custom_claims?.global_name ||
     (supabaseUser.email ? supabaseUser.email.split('@')[0] : 'Usuário');
 
   const avatarUrl =
+    dbAvatarUrl ||
     meta.avatar_url ||
     meta.picture ||
     meta.avatar ||
     null;
-
-  const role = determineUserRole(supabaseUser, fallbackRole);
 
   return {
     id: supabaseUser.id,
     email: supabaseUser.email,
     full_name: fullName,
     avatar_url: avatarUrl,
-    role
+    role: isDocente ? 'teacher' : 'student',
+    docente: isDocente
   };
 }
 
@@ -113,12 +115,12 @@ function TeacherGuard({ user, onOpenAuth, children }) {
 
       <h2 style={{ fontSize: '1.4rem' }}>Acesso Restrito ao Corpo Docente</h2>
       <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.5' }}>
-        A área de gestão (<strong>/professor</strong>) é exclusiva para professores e administradores autorizados.
+        A área de gestão (<strong>/professor</strong>) é exclusiva para professores e administradores autorizados no banco de dados.
       </p>
 
       {user ? (
         <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
-          Conectado como <strong>{user.full_name || user.email}</strong> (Perfil atual: <em>Estudante</em>). Se você é um professor, solicite autorização do seu e-mail junto à administração.
+          Conectado como <strong>{user.full_name || user.email}</strong> (Perfil atual: <em>Estudante</em>). Para se tornar um docente, solicite a alteração do campo <code>docente = true</code> no sistema.
         </div>
       ) : null}
 
@@ -151,18 +153,20 @@ export default function App() {
 
   const [activeLessonContext, setActiveLessonContext] = useState(null);
 
-  // Sync Supabase Auth session & roles on startup
+  // Sync Supabase Auth session & DB roles on startup
   useEffect(() => {
     if (isSupabaseConfigured()) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
         if (session?.user) {
-          setUser(buildUserProfile(session.user));
+          const profile = await fetchUserProfileFromDb(session.user);
+          setUser(profile);
         }
       });
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-          setUser(buildUserProfile(session.user));
+          const profile = await fetchUserProfileFromDb(session.user);
+          setUser(profile);
         } else {
           setUser(null);
         }
@@ -171,6 +175,7 @@ export default function App() {
       return () => subscription.unsubscribe();
     }
   }, []);
+
 
 
   const handleLogout = async () => {
