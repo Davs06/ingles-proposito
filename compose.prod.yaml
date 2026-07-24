@@ -2,7 +2,7 @@
 services:
   # 1. MICROSERVIÇO NODE.JS (IA SPEAKING & GEMINI KEY)
   backend:
-    image: ${DOCKER_USER:-seu-usuario-docker}/ingles-proposito-backend:latest
+    image: davs933/ingles-proposito-backend:latest
     container_name: ingles_proposito_backend
     restart: always
     environment:
@@ -20,7 +20,7 @@ services:
 
   # 2. FRONTEND PWA & DASHBOARD (REACT / NGINX)
   frontend:
-    image: ${DOCKER_USER:-seu-usuario-docker}/ingles-proposito-frontend:latest
+    image: davs933/ingles-proposito-frontend:latest
     container_name: ingles_proposito_frontend
     restart: always
     environment:
