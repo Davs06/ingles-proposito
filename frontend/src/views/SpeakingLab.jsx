@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000/api';
+
 
 const PRACTICE_SENTENCES = [
   { id: 1, text: "Hello! My name is Alex and I am learning English.", level: "Básico" },
@@ -56,9 +58,11 @@ export default function SpeakingLab() {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-      alert('Seu navegador não suporta a Web Speech API nativa. Recomendamos utilizar Google Chrome ou Edge.');
+
+      toast.error('Seu navegador não suporta a Web Speech API nativa. Recomendamos utilizar Google Chrome ou Edge.');
       return;
     }
+
 
     if (isListening) {
       recognitionRef.current.stop();

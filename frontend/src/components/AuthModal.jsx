@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, X, Chrome, CheckCircle, Shield, BookOpen } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
@@ -25,13 +26,15 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
         }
       });
       if (error) {
-        alert('Erro ao enviar Magic Link: ' + error.message);
+        toast.error('Erro ao enviar Magic Link: ' + error.message);
       } else {
         setSentMagicLink(true);
+        toast.success('Magic Link enviado com sucesso!');
       }
     } else {
       setTimeout(() => {
         setSentMagicLink(true);
+        toast.success('Modo de testes ativo! Login simulado.');
         setTimeout(() => {
           onLoginSuccess({
             email,
@@ -57,15 +60,16 @@ export default function AuthModal({ isOpen, onClose, onLoginSuccess }) {
       });
       if (error) {
         if (error.message?.includes('provider is not enabled') || error.code === 400 || error.status === 400) {
-          alert('O provedor de login com o Google ainda não foi ativado no painel do Supabase.\n\nPara ativar:\n1. Acesse o Supabase Dashboard > Authentication > Providers\n2. Ative a opção "Enable Google provider"\n3. Preencha o Client ID e Client Secret do Google.');
+          toast.error('Provedor Google desativado no Supabase Authentication.');
         } else {
-          alert('Erro no Login Google: ' + error.message);
+          toast.error('Erro no Login Google: ' + error.message);
         }
       }
     } else {
-      alert('Supabase não configurado no .env. Por favor, adicione VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
+      toast.error('Supabase não configurado no .env.');
     }
   };
+
 
 
   return (

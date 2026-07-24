@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { Shield, Lock } from 'lucide-react';
+import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+
 import MobileNav from './components/MobileNav';
 import AuthModal from './components/AuthModal';
 import StudentDashboard from './views/StudentDashboard';
@@ -412,9 +414,38 @@ export default function App() {
           }
         }}
       />
+
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 3800,
+          style: {
+            background: 'var(--bg-card, #1e293b)',
+            color: 'var(--text-primary, #f8fafc)',
+            border: '1px solid var(--border-color, rgba(255,255,255,0.12))',
+            borderRadius: 'var(--radius-md, 12px)',
+            boxShadow: '0 12px 28px -6px rgba(0, 0, 0, 0.45)',
+            fontSize: '0.88rem',
+            padding: '12px 16px'
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff'
+            }
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff'
+            }
+          }
+        }}
+      />
     </div>
   );
 }
+
 
 
 

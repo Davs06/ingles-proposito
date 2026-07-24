@@ -5,6 +5,7 @@ import {
   Sparkles, CheckCircle2, ChevronRight, BarChart3, ShieldCheck, Download,
   Upload, FileImage, Loader2
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import { uploadImageToSupabase, supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 export default function TeacherDashboard({ 
@@ -67,12 +68,12 @@ export default function TeacherDashboard({
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('Por favor, selecione um arquivo de imagem válido (JPG, PNG, WebP).');
+      toast.error('Por favor, selecione um arquivo de imagem válido (JPG, PNG, WebP).');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      alert('O tamanho da imagem não deve exceder 10 MB.');
+      toast.error('O tamanho da imagem não deve exceder 10 MB.');
       return;
     }
 
@@ -88,7 +89,7 @@ export default function TeacherDashboard({
 
     if (uploadSource === 'file') {
       if (!selectedPhotoFile) {
-        alert('Por favor, selecione um arquivo de imagem do seu dispositivo.');
+        toast.error('Por favor, selecione um arquivo de imagem do seu dispositivo.');
         return;
       }
       setIsUploadingPhoto(true);
@@ -107,7 +108,7 @@ export default function TeacherDashboard({
       }
     } else {
       if (!newPhotoUrl) {
-        alert('Por favor, digite a URL da imagem.');
+        toast.error('Por favor, digite a URL da imagem.');
         return;
       }
     }
@@ -148,8 +149,9 @@ export default function TeacherDashboard({
     setNewPhotoUrl('');
     setSelectedPhotoFile(null);
     setPhotoPreview(null);
-    alert('Foto enviada e salva no acervo com sucesso!');
+    toast.success('Foto enviada e salva no acervo com sucesso!');
   };
+
 
   const handleDeletePhoto = async (photoId) => {
     if (!confirm('Deseja remover esta foto da galeria?')) return;
@@ -164,6 +166,44 @@ export default function TeacherDashboard({
 
     setGalleryItems(galleryItems.filter((p) => p.id !== photoId));
   };
+
+  const handleDeleteTrack = async (trackId) => {
+    if (!confirm('Tem certeza que deseja excluir esta trilha? Módulos e aulas associados também serão removidos.')) return;
+
+    if (isSupabaseConfigured() && typeof trackId === 'string' && trackId.includes('-')) {
+      try {
+        const { error } = await supabase.from('tracks').delete().eq('id', trackId);
+        if (error) console.warn('Erro ao excluir trilha do Supabase:', error.message);
+      } catch (err) {
+        console.warn('Erro ao excluir trilha do Supabase:', err);
+      }
+    }
+
+    setTracks(tracks.filter((t) => t.id !== trackId));
+    toast.success('Trilha excluída com sucesso!');
+  };
+
+  const handleDeleteLesson = async (lessonId) => {
+    if (!confirm('Deseja excluir esta aula?')) return;
+
+    if (isSupabaseConfigured() && typeof lessonId === 'string' && lessonId.includes('-')) {
+      try {
+        await supabase.from('lessons').delete().eq('id', lessonId);
+      } catch (err) {
+        console.warn('Erro ao excluir aula do Supabase:', err);
+      }
+    }
+
+    setTracks(tracks.map(t => ({
+      ...t,
+      modules: t.modules.map(m => ({
+        ...m,
+        lessons: m.lessons.filter(l => l.id !== lessonId)
+      }))
+    })));
+    toast.success('Aula excluída com sucesso!');
+  };
+
 
   const handleCreateTrack = async (e) => {
     e.preventDefault();
@@ -217,7 +257,7 @@ export default function TeacherDashboard({
     setNewTrackTitle('');
     setNewTrackDesc('');
     setShowAddTrackModal(false);
-    alert('Nova trilha criada com sucesso!');
+    toast.success('Nova trilha criada com sucesso!');
   };
 
   const handleCreateLesson = async (e) => {
@@ -266,7 +306,7 @@ export default function TeacherDashboard({
     setNewLessonYoutubeId('');
     setNewLessonPdfUrl('');
     setShowAddLessonModal(false);
-    alert('Nova aula adicionada com sucesso!');
+    toast.success('Nova aula adicionada com sucesso!');
   };
 
   const handleCreateExercise = async (e) => {
@@ -315,8 +355,9 @@ export default function TeacherDashboard({
     setExerciseQuestion('');
     setExerciseCorrectAnswer('');
     setExerciseExplanation('');
-    alert('Novo exercício adicionado com sucesso!');
+    toast.success('Novo exercício adicionado com sucesso!');
   };
+
 
 
 
@@ -553,7 +594,16 @@ export default function TeacherDashboard({
                   <h4 style={{ fontSize: '1.15rem', marginTop: '4px' }}>{track.title}</h4>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{track.description}</p>
                 </div>
+                <button
+                  onClick={() => handleDeleteTrack(track.id)}
+                  className="btn btn-secondary btn-sm"
+                  style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '6px 12px', fontSize: '0.78rem' }}
+                  title="Excluir Trilha"
+                >
+                  <Trash2 size={14} /> Excluir Trilha
+                </button>
               </div>
+
 
               {track.modules.map((mod) => (
                 <div 
@@ -922,9 +972,10 @@ export default function TeacherDashboard({
                 <h3 style={{ fontSize: '1.15rem' }}>Relatório da Turma — PIB São Miguel</h3>
                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Métricas de progresso, speaking IA e conclusão de tarefas</p>
               </div>
-              <button className="btn btn-secondary btn-sm" onClick={() => alert('Relatório exportado em CSV!')}>
+              <button className="btn btn-secondary btn-sm" onClick={() => toast.success('Relatório exportado em CSV com sucesso!')}>
                 <Download size={14} /> Exportar CSV
               </button>
+
             </div>
 
             {/* Quick Metrics Cards */}
