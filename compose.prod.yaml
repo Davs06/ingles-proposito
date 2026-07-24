@@ -1,0 +1,42 @@
+# Compose para deploy de Produção na VPS (Puxando Imagens do Docker Hub)
+services:
+  # 1. MICROSERVIÇO NODE.JS (IA SPEAKING & GEMINI KEY)
+  backend:
+    image: ${DOCKER_USER:-seu-usuario-docker}/ingles-proposito-backend:latest
+    container_name: ingles_proposito_backend
+    restart: always
+    environment:
+      - PORT=4000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.routers.backend.tls.certresolver=lets-encrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=4000"
+    networks:
+      - traefik-net
+
+  # 2. FRONTEND PWA & DASHBOARD (REACT / NGINX)
+  frontend:
+    image: ${DOCKER_USER:-seu-usuario-docker}/ingles-proposito-frontend:latest
+    container_name: ingles_proposito_frontend
+    restart: always
+    environment:
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+      - VITE_BACKEND_URL=https://inglescomproposito.org/api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`inglescomproposito.org`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.routers.frontend.tls.certresolver=lets-encrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - traefik-net
+
+networks:
+  traefik-net:
+    external: true
