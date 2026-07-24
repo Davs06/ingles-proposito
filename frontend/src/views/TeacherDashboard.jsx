@@ -398,10 +398,20 @@ export default function TeacherDashboard({
         if (data) {
           newEx = data;
         }
+
+        // Criar notificação automática para os alunos
+        const selectedLessonObj = allLessons.find((l) => l.id === targetLessonForEx);
+        const notifPayload = {
+          title: 'Novo Homework Disponível! 📝',
+          message: `Um novo exercício foi adicionado à aula "${selectedLessonObj?.title || 'Inglês'}".`,
+          type: 'new_homework'
+        };
+        await supabase.from('notifications').insert([notifPayload]);
       } catch (err) {
-        console.warn('Erro ao salvar exercício no banco:', err);
+        console.warn('Erro ao salvar exercício ou notificação no banco:', err);
       }
     }
+
 
     setTracks(tracks.map(t => ({
       ...t,

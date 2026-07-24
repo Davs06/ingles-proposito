@@ -148,6 +148,17 @@ CREATE TABLE IF NOT EXISTS public.materials (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 11. NOTIFICAÇÕES DO SISTEMA E HOMEWORK
+CREATE TABLE IF NOT EXISTS public.notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE, -- NULL = para todos os alunos
+    title TEXT NOT NULL,
+    message TEXT NOT NULL,
+    type TEXT NOT NULL DEFAULT 'new_homework', -- 'new_homework', 'new_material', 'system'
+    is_read BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
@@ -161,9 +172,14 @@ ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_answers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Leitura global de materiais" ON public.materials FOR SELECT USING (true);
 CREATE POLICY "Gestão de materiais por docentes" ON public.materials FOR ALL USING (public.is_teacher_or_admin());
+
+CREATE POLICY "Leitura global de notificacoes" ON public.notifications FOR SELECT USING (true);
+CREATE POLICY "Gestão de notificacoes por docentes" ON public.notifications FOR ALL USING (public.is_teacher_or_admin());
+
 
 -- ==========================================
 -- SUPABASE STORAGE BUCKETS (gallery-photos & lessons-pdf)

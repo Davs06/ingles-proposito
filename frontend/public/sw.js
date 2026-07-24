@@ -1,48 +1,41 @@
-const CACHE_NAME = 'ingles-proposito-cache-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json'
-];
+// Service Worker para Notificações Push na Tela de Bloqueio (Web Push & PWA)
+self.addEventListener('push', function(event) {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { title: 'Inglês com Propósito 📝', message: event.data ? event.data.text() : 'Novo Homework Disponível!' };
+  }
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
+  const title = data.title || 'Inglês com Propósito 📝';
+  const options = {
+    body: data.message || 'Novo exercício cadastrado pelo professor. Acesse para responder!',
+    icon: '/pwa-192.png',
+    badge: '/pwa-192.png',
+    vibrate: [200, 100, 200],
+    tag: 'homework-notification',
+    renotify: true,
+    data: {
+      url: '/aluno'
+    }
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames
-          .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
-  
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
+    clients.matchAll({ type: 'window' }).then(function(clientList) {
+      for (let i = 0; i < clientList.length; i++) {
+        let client = clientList[i];
+        if (client.url.includes('/aluno') && 'focus' in client) {
+          return client.focus();
         }
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request);
-      })
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('/aluno');
+      }
+    })
   );
 });
