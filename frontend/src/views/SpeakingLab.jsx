@@ -151,50 +151,53 @@ export default function SpeakingLab() {
   };
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      
+      {/* Header Panel */}
       <div 
         className="glass-panel" 
         style={{ 
-          padding: '24px', 
+          padding: '20px', 
           background: 'linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(59,130,246,0.1) 100%)',
           borderColor: 'rgba(139,92,246,0.3)'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '8px' }}>
-          <div style={{ padding: '8px', background: 'var(--accent-purple)', borderRadius: '12px', color: '#fff' }}>
-            <Mic size={24} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+          <div style={{ padding: '8px', background: 'var(--accent-purple)', borderRadius: '12px', color: '#fff', flexShrink: 0 }}>
+            <Mic size={22} />
           </div>
           <div>
-            <span className="tag tag-purple">Tecnologia IA Google Gemini (Free Tier)</span>
-            <h2 style={{ fontSize: '1.5rem', marginTop: '4px' }}>Laboratório Inteligente de Speaking</h2>
+            <span className="tag tag-purple" style={{ fontSize: '0.62rem' }}>IA Gemini</span>
+            <h2 style={{ fontSize: '1.35rem', marginTop: '2px' }}>Laboratório Inteligente de Speaking</h2>
           </div>
         </div>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', maxWidth: '650px' }}>
-          Reconhecimento de voz direto no dispositivo via <strong>Web Speech API</strong> e avaliação semântica por inteligência artificial generativa.
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', maxWidth: '650px', lineHeight: '1.4' }}>
+          Reconhecimento de voz direto no dispositivo via <strong>Web Speech API</strong> e avaliação de fluência por inteligência artificial.
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+      {/* Tabs Bar */}
+      <div className="scroll-x-tabs" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
         <button
           onClick={() => setActiveMode('read')}
           className={`btn btn-sm ${activeMode === 'read' ? 'btn-primary' : 'btn-secondary'}`}
         >
-          <Volume2 size={16} /> Leitura & Feedback Fonético
+          <Volume2 size={15} /> Leitura & Feedback Fonético
         </button>
         <button
           onClick={() => setActiveMode('chat')}
           className={`btn btn-sm ${activeMode === 'chat' ? 'btn-primary' : 'btn-secondary'}`}
         >
-          <MessageSquare size={16} /> Conversação Livre com IA
+          <MessageSquare size={15} /> Conversação Livre com IA
         </button>
       </div>
 
       {activeMode === 'read' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-          <div className="glass-panel" style={{ padding: '24px' }}>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '14px' }}>Selecione uma Frase para Treinar:</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
+          <div className="glass-panel" style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: '12px' }}>Selecione uma Frase para Treinar:</h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
               {PRACTICE_SENTENCES.map((sent) => (
                 <div
                   key={sent.id}
@@ -205,27 +208,29 @@ export default function SpeakingLab() {
                   }}
                   className="glass-panel glass-panel-hover"
                   style={{
-                    padding: '14px 18px',
+                    padding: '12px 14px',
                     cursor: 'pointer',
                     display: 'flex',
                     justify: 'space-between',
                     alignItems: 'center',
+                    gap: '10px',
                     background: selectedSentence.id === sent.id ? 'var(--accent-light)' : 'var(--bg-secondary)',
                     borderColor: selectedSentence.id === sent.id ? 'var(--accent-primary)' : 'var(--border-color)'
                   }}
                 >
-                  <div>
-                    <span className="tag tag-blue" style={{ fontSize: '0.65rem' }}>{sent.level}</span>
-                    <p style={{ fontWeight: '600', fontSize: '0.95rem', marginTop: '6px', color: 'var(--text-primary)' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <span className="tag tag-blue" style={{ fontSize: '0.62rem' }}>{sent.level}</span>
+                    <p style={{ fontWeight: '600', fontSize: '0.88rem', marginTop: '4px', color: 'var(--text-primary)', lineHeight: '1.3' }}>
                       "{sent.text}"
                     </p>
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); playNativeAudio(sent.text); }} 
                     className="btn btn-secondary btn-sm"
+                    style={{ padding: '6px 10px', flexShrink: 0 }}
                     title="Ouvir Pronúncia Nativa"
                   >
-                    <Volume2 size={16} />
+                    <Volume2 size={15} />
                   </button>
                 </div>
               ))}
@@ -235,12 +240,12 @@ export default function SpeakingLab() {
               style={{ 
                 background: 'var(--bg-secondary)', 
                 borderRadius: 'var(--radius-md)', 
-                padding: '28px', 
+                padding: '24px 16px', 
                 textAlign: 'center',
                 border: '1px solid var(--border-color)'
               }}
             >
-              <h4 style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+              <h4 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '14px' }}>
                 Clique no microfone e leia a frase em voz alta:
               </h4>
 
@@ -248,8 +253,8 @@ export default function SpeakingLab() {
                 onClick={toggleListening}
                 className={`pulse-animation`}
                 style={{
-                  width: '70px',
-                  height: '70px',
+                  width: '64px',
+                  height: '64px',
                   borderRadius: '50%',
                   border: 'none',
                   background: isListening ? '#ef4444' : 'var(--accent-primary)',
@@ -259,22 +264,22 @@ export default function SpeakingLab() {
                   justifyContent: 'center',
                   cursor: 'pointer',
                   boxShadow: 'var(--shadow-glow)',
-                  marginBottom: '16px'
+                  marginBottom: '12px'
                 }}
               >
-                {isListening ? <MicOff size={32} /> : <Mic size={32} />}
+                {isListening ? <MicOff size={28} /> : <Mic size={28} />}
               </button>
 
-              <div style={{ fontSize: '0.85rem', color: isListening ? '#ef4444' : 'var(--text-muted)', fontWeight: '600' }}>
+              <div style={{ fontSize: '0.82rem', color: isListening ? '#ef4444' : 'var(--text-muted)', fontWeight: '600' }}>
                 {isListening ? 'Ouvindo... Fale agora!' : 'Clique para começar a gravar'}
               </div>
 
               {userTranscript && (
-                <div style={{ marginTop: '20px', padding: '14px', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                <div style={{ marginTop: '16px', padding: '12px', background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
                     Sua voz capturada:
                   </div>
-                  <p style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--accent-primary)' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--accent-primary)' }}>
                     "{userTranscript}"
                   </p>
                 </div>
@@ -284,14 +289,14 @@ export default function SpeakingLab() {
                 <button 
                   onClick={handleEvaluateSpeaking} 
                   className="btn btn-primary" 
-                  style={{ marginTop: '16px', background: 'var(--accent-purple)' }}
+                  style={{ marginTop: '14px', background: 'var(--accent-purple)', width: '100%', maxWidth: '320px' }}
                 >
-                  <Sparkles size={16} /> Avaliar Pronúncia com Gemini IA
+                  <Sparkles size={15} /> Avaliar Pronúncia com Gemini IA
                 </button>
               )}
 
               {evaluating && (
-                <div style={{ marginTop: '16px', color: 'var(--accent-purple)', fontSize: '0.9rem', fontWeight: '600' }}>
+                <div style={{ marginTop: '14px', color: 'var(--accent-purple)', fontSize: '0.85rem', fontWeight: '600' }}>
                   Analisando fonética e fluência via IA...
                 </div>
               )}
@@ -299,28 +304,28 @@ export default function SpeakingLab() {
           </div>
 
           {evalResult && (
-            <div className="glass-panel animate-fade-in" style={{ padding: '24px', borderColor: 'var(--accent-purple)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Award size={24} color="var(--accent-purple)" />
-                  <h3 style={{ fontSize: '1.2rem' }}>Resultado da Avaliação Gemini IA</h3>
+            <div className="glass-panel animate-fade-in" style={{ padding: '20px', borderColor: 'var(--accent-purple)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Award size={22} color="var(--accent-purple)" />
+                  <h3 style={{ fontSize: '1.1rem' }}>Resultado da Avaliação Gemini IA</h3>
                 </div>
-                <div className="tag tag-purple" style={{ fontSize: '0.9rem', padding: '6px 14px' }}>
+                <div className="tag tag-purple" style={{ fontSize: '0.82rem', padding: '5px 12px' }}>
                   Score: {evalResult.score}/100
                 </div>
               </div>
 
-              <div style={{ background: 'var(--bg-secondary)', padding: '16px', borderRadius: 'var(--radius-md)', marginBottom: '16px' }}>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Feedback do Tutor IA:</div>
-                <p style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
+              <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: 'var(--radius-md)', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' }}>Feedback do Tutor IA:</div>
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
                   {evalResult.feedback}
                 </p>
               </div>
 
               {evalResult.phoneticTips && evalResult.phoneticTips.length > 0 && (
                 <div>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>Dicas de Pronúncia:</h4>
-                  <ul style={{ paddingLeft: '20px', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <h4 style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>Dicas de Pronúncia:</h4>
+                  <ul style={{ paddingLeft: '18px', fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     {evalResult.phoneticTips.map((tip, i) => (
                       <li key={i}>{tip}</li>
                     ))}
@@ -331,20 +336,20 @@ export default function SpeakingLab() {
           )}
         </div>
       ) : (
-        <div className="glass-panel" style={{ padding: '20px', height: '550px', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', paddingRight: '6px' }}>
+        <div className="glass-panel" style={{ padding: '16px', height: '480px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
             {chatMessages.map((msg, index) => (
               <div
                 key={index}
                 style={{
                   alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                  maxWidth: '80%',
-                  padding: '12px 16px',
-                  borderRadius: '16px',
+                  maxWidth: '85%',
+                  padding: '10px 14px',
+                  borderRadius: '14px',
                   background: msg.role === 'user' ? 'var(--accent-primary)' : 'var(--bg-secondary)',
                   color: '#fff',
                   border: msg.role === 'model' ? '1px solid var(--border-color)' : 'none',
-                  fontSize: '0.9rem',
+                  fontSize: '0.88rem',
                   lineHeight: '1.4'
                 }}
               >
@@ -352,31 +357,31 @@ export default function SpeakingLab() {
                 {msg.role === 'model' && (
                   <button
                     onClick={() => playNativeAudio(msg.content)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginLeft: '8px' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginLeft: '6px' }}
                     title="Ouvir em Áudio"
                   >
-                    <Volume2 size={14} />
+                    <Volume2 size={13} />
                   </button>
                 )}
               </div>
             ))}
             {chatLoading && (
-              <div style={{ alignSelf: 'flex-start', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+              <div style={{ alignSelf: 'flex-start', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
                 Assistente IA digitando...
               </div>
             )}
           </div>
 
-          <form onSubmit={handleSendChatMessage} style={{ display: 'flex', gap: '10px', marginTop: '16px' }}>
+          <form onSubmit={handleSendChatMessage} style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
             <input
               type="text"
-              placeholder="Escreva em inglês ou use sua voz..."
+              placeholder="Escreva em inglês..."
               className="input-field"
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary" disabled={chatLoading || !chatInput.trim()}>
-              <Send size={16} />
+            <button type="submit" className="btn btn-primary" style={{ padding: '10px 16px' }} disabled={chatLoading || !chatInput.trim()}>
+              <Send size={15} />
             </button>
           </form>
         </div>
@@ -384,3 +389,4 @@ export default function SpeakingLab() {
     </div>
   );
 }
+

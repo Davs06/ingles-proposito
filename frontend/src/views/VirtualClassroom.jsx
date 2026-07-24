@@ -9,16 +9,18 @@ export default function VirtualClassroom({ lesson, track, module, onBack, onComp
   const [activeTab, setActiveTab] = useState('video');
 
   return (
-    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      
+      {/* Action Header Bar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
         <button onClick={onBack} className="btn btn-secondary btn-sm">
-          <ArrowLeft size={16} /> Voltar para Trilhas
+          <ArrowLeft size={15} /> <span className="hide-mobile">Voltar para</span> Trilhas
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           {lesson.pdf_url && (
             <button onClick={() => setShowPdf(true)} className="btn btn-secondary btn-sm" style={{ color: 'var(--accent-primary)' }}>
-              <FileText size={16} /> Material PDF
+              <FileText size={15} /> Material PDF
             </button>
           )}
 
@@ -30,43 +32,44 @@ export default function VirtualClassroom({ lesson, track, module, onBack, onComp
               color: isCompleted ? 'var(--accent-success)' : undefined
             }}
           >
-            <CheckCircle size={16} /> {isCompleted ? 'Aula Concluída' : 'Marcar Concluída'}
+            <CheckCircle size={15} /> {isCompleted ? 'Aula Concluída' : 'Marcar Concluída'}
           </button>
         </div>
       </div>
 
       <div>
-        <div style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '600', textTransform: 'uppercase' }}>
+        <div style={{ fontSize: '0.75rem', color: 'var(--accent-primary)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {track?.title} • {module?.title}
         </div>
-        <h2 style={{ fontSize: '1.6rem', marginTop: '4px' }}>{lesson.title}</h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+        <h2 style={{ fontSize: '1.4rem', marginTop: '4px' }}>{lesson.title}</h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', marginTop: '4px' }}>
           {lesson.description}
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px' }}>
+      {/* Tabs */}
+      <div className="scroll-x-tabs" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '8px' }}>
         <button
           onClick={() => setActiveTab('video')}
           className={`btn btn-sm ${activeTab === 'video' ? 'btn-primary' : 'btn-secondary'}`}
         >
-          <BookOpen size={16} /> Player da Videoaula
+          <BookOpen size={15} /> Player da Videoaula
         </button>
         <button
           onClick={() => setActiveTab('homework')}
           className={`btn btn-sm ${activeTab === 'homework' ? 'btn-primary' : 'btn-secondary'}`}
         >
-          <Award size={16} /> Resolução de Homework ({lesson.exercises?.length || 0})
+          <Award size={15} /> Resolução de Homework ({lesson.exercises?.length || 0})
         </button>
       </div>
 
       {activeTab === 'video' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <VideoPlayer youtubeId={lesson.youtube_id} title={lesson.title} />
 
-          <div className="glass-panel" style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px', background: 'var(--bg-glass)' }}>
-            <Sparkles size={20} color="var(--accent-primary)" />
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+          <div className="glass-panel" style={{ padding: '14px 18px', display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--bg-glass)' }}>
+            <Sparkles size={18} color="var(--accent-primary)" style={{ flexShrink: 0 }} />
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
               Assista à aula com atenção e, em seguida, responda às questões no painel de <strong>Homework</strong> para fixar o conteúdo!
             </div>
           </div>
@@ -84,3 +87,4 @@ export default function VirtualClassroom({ lesson, track, module, onBack, onComp
     </div>
   );
 }
+

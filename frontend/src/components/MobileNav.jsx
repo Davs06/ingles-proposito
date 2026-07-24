@@ -1,53 +1,84 @@
 import React from 'react';
-import { BookOpen, Mic, Image as ImageIcon } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { BookOpen, Mic, Image as ImageIcon, Layers, FileCheck, Users, LayoutGrid } from 'lucide-react';
 
-export default function MobileNav({ activeTab, setActiveTab, role }) {
-  if (role === 'teacher') {
+export default function MobileNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const pathname = location.pathname;
+  const isTeacher = pathname.startsWith('/professor');
+
+  if (isTeacher) {
+    const isAmbientes = pathname === '/professor' || pathname === '/professor/ambientes';
+    const isTrilhas = pathname === '/professor/trilhas';
+    const isExercicios = pathname === '/professor/exercicios';
+    const isAlunos = pathname === '/professor/alunos';
+
     return (
       <nav className="mobile-bottom-nav">
         <button
-          onClick={() => setActiveTab('manage-content')}
-          className={`nav-item ${activeTab === 'manage-content' ? 'active' : ''}`}
+          onClick={() => navigate('/professor/ambientes')}
+          className={`nav-item ${isAmbientes ? 'active' : ''}`}
         >
-          <BookOpen size={20} />
-          <span>Conteúdo</span>
+          <LayoutGrid size={19} />
+          <span>Ambientes</span>
         </button>
         <button
-          onClick={() => setActiveTab('manage-gallery')}
-          className={`nav-item ${activeTab === 'manage-gallery' ? 'active' : ''}`}
+          onClick={() => navigate('/professor/trilhas')}
+          className={`nav-item ${isTrilhas ? 'active' : ''}`}
         >
-          <ImageIcon size={20} />
-          <span>Galeria</span>
+          <Layers size={19} />
+          <span>Trilhas</span>
+        </button>
+        <button
+          onClick={() => navigate('/professor/exercicios')}
+          className={`nav-item ${isExercicios ? 'active' : ''}`}
+        >
+          <FileCheck size={19} />
+          <span>Exercícios</span>
+        </button>
+        <button
+          onClick={() => navigate('/professor/alunos')}
+          className={`nav-item ${isAlunos ? 'active' : ''}`}
+        >
+          <Users size={19} />
+          <span>Alunos</span>
         </button>
       </nav>
     );
   }
 
+  const isDashboard = pathname === '/aluno' || pathname === '/aluno/dashboard' || pathname.startsWith('/aluno/aula');
+  const isSpeaking = pathname === '/aluno/speaking';
+  const isGallery = pathname === '/aluno/galeria';
+
   return (
     <nav className="mobile-bottom-nav">
       <button
-        onClick={() => setActiveTab('dashboard')}
-        className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+        onClick={() => navigate('/aluno')}
+        className={`nav-item ${isDashboard ? 'active' : ''}`}
       >
-        <BookOpen size={20} />
+        <BookOpen size={19} />
         <span>Trilhas</span>
       </button>
 
       <button
-        onClick={() => setActiveTab('speaking')}
-        className={`nav-item ${activeTab === 'speaking' ? 'active' : ''}`}
+        onClick={() => navigate('/aluno/speaking')}
+        className={`nav-item ${isSpeaking ? 'active' : ''}`}
       >
-        <Mic size={20} />
+        <Mic size={19} />
         <span>Speaking IA</span>
       </button>
 
       <button
-        onClick={() => setActiveTab('gallery')}
-        className={`nav-item ${activeTab === 'gallery' ? 'active' : ''}`}
+        onClick={() => navigate('/aluno/galeria')}
+        className={`nav-item ${isGallery ? 'active' : ''}`}
       >
-        <ImageIcon size={20} />
+        <ImageIcon size={19} />
         <span>Galeria</span>
       </button>
     </nav>
   );
 }
+
+

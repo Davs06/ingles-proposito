@@ -191,3 +191,23 @@ INSERT INTO public.gallery_photos (id, title, description, image_url, category, 
 ('f2222222-2222-2222-2222-222222222222', 'Workshop de Pronúncia & Pitching', 'Atividade prática de speaking entre nossos alunos da comunidade e mentores norte-americanos.', 'https://images.unsplash.com/photo-1531545514256-b1400bc00f31?auto=format&fit=crop&w=800&q=80', 'Evento', '2026-04-10'),
 ('f3333333-3333-3333-3333-333333333333', 'Certificação da Turma de 2026', 'Entrega de certificados do nível intermediário com a presença dos parceiros sociais.', 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80', 'Aula Especial', '2026-06-20')
 ON CONFLICT DO NOTHING;
+
+-- ==========================================
+-- BUCKETS DE STORAGE (SUPABASE S3)
+-- ==========================================
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('gallery-photos', 'gallery-photos', true)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('lessons-pdf', 'lessons-pdf', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- RLS de Storage para leitura pública e escrita por docentes
+CREATE POLICY "Leitura pública de fotos" ON storage.objects FOR SELECT USING (bucket_id = 'gallery-photos');
+CREATE POLICY "Upload de fotos por docentes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'gallery-photos');
+
+CREATE POLICY "Leitura pública de PDFs" ON storage.objects FOR SELECT USING (bucket_id = 'lessons-pdf');
+CREATE POLICY "Upload de PDFs por docentes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'lessons-pdf');
+

@@ -27,7 +27,7 @@ export default function PdfViewerModal({ pdfUrl, title, isOpen, onClose }) {
               className="btn btn-secondary btn-sm"
               title="Abrir em Nova Guia"
             >
-              <ExternalLink size={14} /> Abrir Externamente
+              <ExternalLink size={14} /> <span className="hide-mobile">Abrir Externamente</span>
             </a>
             <button onClick={onClose} className="btn btn-secondary btn-sm" style={{ padding: '6px', borderRadius: '50%' }}>
               <X size={18} />

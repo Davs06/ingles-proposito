@@ -12,7 +12,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
 
   if (!exercises || exercises.length === 0) {
     return (
-      <div className="glass-panel" style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)' }}>
+      <div className="glass-panel" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
         Nenhum exercício cadastrado para esta aula.
       </div>
     );
@@ -62,39 +62,39 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
   if (finished) {
     const finalPercent = Math.round(((scoreCount) / exercises.length) * 100);
     return (
-      <div className="glass-panel animate-fade-in" style={{ padding: '32px', textAlign: 'center' }}>
-        <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--accent-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-success)', margin: '0 auto 16px auto' }}>
-          <Award size={32} />
+      <div className="glass-panel animate-fade-in" style={{ padding: '28px 20px', textAlign: 'center' }}>
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--accent-success-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-success)', margin: '0 auto 14px auto' }}>
+          <Award size={28} />
         </div>
-        <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>Homework Concluído!</h3>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '20px' }}>
+        <h3 style={{ fontSize: '1.3rem', marginBottom: '6px' }}>Homework Concluído!</h3>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '18px' }}>
           Você acertou <strong>{scoreCount} de {exercises.length}</strong> exercícios ({finalPercent}% de aproveitamento).
         </p>
         <button onClick={handleRestart} className="btn btn-secondary btn-sm" style={{ margin: '0 auto' }}>
-          <RefreshCw size={16} /> Refazer Exercícios
+          <RefreshCw size={15} /> Refazer Exercícios
         </button>
       </div>
     );
   }
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '24px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <div className="tag tag-blue">
+    <div className="glass-panel animate-fade-in" style={{ padding: '18px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '6px' }}>
+        <div className="tag tag-blue" style={{ fontSize: '0.68rem' }}>
           Exercício {currentIndex + 1} de {exercises.length}
         </div>
-        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           {currentEx.type === 'multiple_choice' ? 'Múltipla Escolha' : 'Preenchimento de Lacuna'}
         </span>
       </div>
 
-      <h4 style={{ fontSize: '1.1rem', lineHeight: '1.4', marginBottom: '20px' }}>
+      <h4 style={{ fontSize: '1.05rem', lineHeight: '1.35', marginBottom: '16px' }}>
         {currentEx.question}
       </h4>
 
       <form onSubmit={handleSubmit}>
         {currentEx.type === 'multiple_choice' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
             {currentEx.options.map((opt, idx) => {
               const isSelected = selectedOption === opt;
               let border = 'var(--border-color)';
@@ -119,8 +119,9 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
+                    gap: '10px',
+                    padding: '10px 14px',
+                    minHeight: '44px',
                     borderRadius: 'var(--radius-md)',
                     border: `1px solid ${border}`,
                     background: bg,
@@ -135,9 +136,9 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
                     checked={isSelected}
                     onChange={() => !submitted && setSelectedOption(opt)}
                     disabled={submitted}
-                    style={{ accentColor: 'var(--accent-primary)' }}
+                    style={{ accentColor: 'var(--accent-primary)', width: '16px', height: '16px' }}
                   />
-                  <span style={{ fontSize: '0.92rem', color: 'var(--text-primary)' }}>{opt}</span>
+                  <span style={{ fontSize: '0.88rem', color: 'var(--text-primary)', lineHeight: '1.3' }}>{opt}</span>
                 </label>
               );
             })}
@@ -145,7 +146,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
         )}
 
         {currentEx.type === 'fill_in_blank' && (
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '16px' }}>
             <input
               type="text"
               placeholder="Digite a resposta correta..."
@@ -168,29 +169,29 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
             Confirmar Resposta
           </button>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'flex-start',
-                gap: '12px',
-                padding: '14px',
+                gap: '10px',
+                padding: '12px',
                 borderRadius: 'var(--radius-md)',
                 background: isCorrect ? 'var(--accent-success-bg)' : 'rgba(239, 68, 68, 0.12)',
                 border: `1px solid ${isCorrect ? 'var(--accent-success)' : '#ef4444'}`
               }}
             >
               {isCorrect ? (
-                <CheckCircle2 size={22} color="var(--accent-success)" style={{ flexShrink: 0 }} />
+                <CheckCircle2 size={20} color="var(--accent-success)" style={{ flexShrink: 0, marginTop: '2px' }} />
               ) : (
-                <XCircle size={22} color="#ef4444" style={{ flexShrink: 0 }} />
+                <XCircle size={20} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
               )}
               <div>
-                <strong style={{ fontSize: '0.95rem', color: isCorrect ? 'var(--accent-success)' : '#ef4444' }}>
+                <strong style={{ fontSize: '0.9rem', color: isCorrect ? 'var(--accent-success)' : '#ef4444' }}>
                   {isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta.'}
                 </strong>
                 {currentEx.explanation && (
-                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '2px', lineHeight: '1.3' }}>
                     {currentEx.explanation}
                   </p>
                 )}
@@ -198,7 +199,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
             </div>
 
             <button type="button" onClick={handleNext} className="btn btn-primary" style={{ width: '100%' }}>
-              {currentIndex < exercises.length - 1 ? 'Próximo Exercício' : 'Finalizar Homework'} <ArrowRight size={16} />
+              {currentIndex < exercises.length - 1 ? 'Próximo Exercício' : 'Finalizar Homework'} <ArrowRight size={15} />
             </button>
           </div>
         )}
@@ -206,3 +207,4 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
     </div>
   );
 }
+
