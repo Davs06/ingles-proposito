@@ -6,7 +6,8 @@ import {
   Upload, FileImage, Loader2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { uploadImageToSupabase, supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { uploadImageToSupabase, uploadFileToSupabase, supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { INITIAL_MATERIALS } from './StudyMaterials';
 
 export default function TeacherDashboard({ 
   tracks, 
@@ -50,6 +51,29 @@ export default function TeacherDashboard({
   const [selectedPhotoFile, setSelectedPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  // Form states for PDF Booklet & Materials Upload
+  const [materialsList, setMaterialsList] = useState(INITIAL_MATERIALS);
+  const [newMatTitle, setNewMatTitle] = useState('');
+  const [newMatDesc, setNewMatDesc] = useState('');
+  const [newMatCategory, setNewMatCategory] = useState('Apostila');
+  const [selectedMatFile, setSelectedMatFile] = useState(null);
+  const [isUploadingMat, setIsUploadingMat] = useState(false);
+
+  // Load materials from Supabase DB on startup
+  React.useEffect(() => {
+    async function loadMat() {
+      if (!isSupabaseConfigured()) return;
+      try {
+        const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
+        if (data && data.length > 0) setMaterialsList(data);
+      } catch (err) {
+        console.warn('Erro ao carregar materiais no painel docente:', err);
+      }
+    }
+    loadMat();
+  }, []);
+
 
   // Mock Students data for Environment 4 (Gestão de Alunos)
   const [students, setStudents] = useState([
@@ -358,7 +382,69 @@ export default function TeacherDashboard({
     toast.success('Novo exercício adicionado com sucesso!');
   };
 
+  const handleAddMaterial = async (e) => {
 
+    e.preventDefault();
+    if (!newMatTitle || !selectedMatFile) {
+      toast.error('Por favor, informe o título e selecione um arquivo (PDF ou Imagem).');
+      return;
+    }
+
+    setIsUploadingMat(true);
+    try {
+      const fileUrl = await uploadFileToSupabase(selectedMatFile, 'lessons-pdf');
+      const isPdf = selectedMatFile.type === 'application/pdf' || selectedMatFile.name.endsWith('.pdf');
+
+      const matPayload = {
+        title: newMatTitle,
+        description: newMatDesc,
+        file_url: fileUrl,
+        file_type: isPdf ? 'pdf' : 'image',
+        category: newMatCategory
+      };
+
+      let newMat = {
+        id: 'm_' + Date.now(),
+        ...matPayload
+      };
+
+      if (isSupabaseConfigured()) {
+        try {
+          const { data } = await supabase.from('materials').insert([matPayload]).select().single();
+          if (data) newMat = data;
+        } catch (dbErr) {
+          console.warn('Erro ao salvar material no banco:', dbErr);
+        }
+
+      }
+
+      setMaterialsList([newMat, ...materialsList]);
+      setNewMatTitle('');
+      setNewMatDesc('');
+      setSelectedMatFile(null);
+      toast.success('Apostila/Material enviado com sucesso!');
+    } catch (err) {
+      console.error('Erro no upload de material:', err);
+      toast.error('Ocorreu um erro ao enviar o arquivo.');
+    } finally {
+      setIsUploadingMat(false);
+    }
+  };
+
+  const handleDeleteMaterial = async (matId) => {
+    if (!confirm('Deseja excluir esta apostila/material?')) return;
+
+    if (isSupabaseConfigured() && typeof matId === 'string' && matId.includes('-')) {
+      try {
+        await supabase.from('materials').delete().eq('id', matId);
+      } catch (err) {
+        console.warn('Erro ao excluir material do Supabase:', err);
+      }
+    }
+
+    setMaterialsList(materialsList.filter((m) => m.id !== matId));
+    toast.success('Material excluído com sucesso!');
+  };
 
 
   // Environment Config Data
@@ -383,6 +469,17 @@ export default function TeacherDashboard({
       description: 'Construtor dinâmico de homework, questões objetivas e lacunas.',
       count: `${allLessons.reduce((sum, l) => sum + (l.exercises?.length || 0), 0)} Exercícios`
     },
+    {
+      id: 'materials',
+      name: 'Ambiente de Apostilas & Materiais PDF',
+      tag: 'Documentos & Apostilas',
+      tagColor: 'tag-cyan',
+      icon: BookOpen,
+      color: '#06b6d4',
+      description: 'Upload de apostilas em PDF e guias de estudo no bucket lessons-pdf do Supabase.',
+      count: `${materialsList.length} Apostilas Cadastradas`
+    },
+
     {
       id: 'gallery',
       name: 'Ambiente de Galeria & Vivências',
@@ -484,11 +581,18 @@ export default function TeacherDashboard({
           <FileCheck size={15} /> Amb. Exercícios
         </button>
         <button
+          onClick={() => setActiveTab('materials')}
+          className={`btn btn-sm ${activeTab === 'materials' ? 'btn-primary' : 'btn-secondary'}`}
+        >
+          <BookOpen size={15} /> Amb. Apostilas ({materialsList.length})
+        </button>
+        <button
           onClick={() => setActiveTab('gallery')}
           className={`btn btn-sm ${activeTab === 'gallery' ? 'btn-primary' : 'btn-secondary'}`}
         >
           <ImageIcon size={15} /> Amb. Galeria ({galleryItems.length})
         </button>
+
         <button
           onClick={() => setActiveTab('students')}
           className={`btn btn-sm ${activeTab === 'students' ? 'btn-primary' : 'btn-secondary'}`}
@@ -781,9 +885,93 @@ export default function TeacherDashboard({
       )}
 
       {/* ========================================================
+          AMBIENTE APOSTILAS: GESTÃO DE APOSTILAS & MATERIAIS PDF
+          ======================================================== */}
+      {activeTab === 'materials' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div className="glass-panel" style={{ padding: '20px' }}>
+            <h3 style={{ fontSize: '1.15rem', marginBottom: '4px' }}>Cadastrar Nova Apostila / Material em PDF</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: '16px' }}>
+              Envie apostilas em PDF ou imagens educativas diretamente para o bucket <code>lessons-pdf</code> do Supabase Storage.
+            </p>
+
+            <form onSubmit={handleAddMaterial} style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxWidth: '650px' }}>
+              <input
+                type="text"
+                placeholder="Título do Material (ex: Apostila Módulo 1 - Conversação)"
+                className="input-field"
+                value={newMatTitle}
+                onChange={(e) => setNewMatTitle(e.target.value)}
+                required
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Categoria</label>
+                  <select className="input-field" value={newMatCategory} onChange={(e) => setNewMatCategory(e.target.value)}>
+                    <option value="Apostila">Apostila</option>
+                    <option value="Guia Gramatical">Guia Gramatical</option>
+                    <option value="Vocabulário">Vocabulário</option>
+                    <option value="Exercício Extra">Exercício Extra</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Arquivo (PDF ou Imagem)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,image/*"
+                    onChange={(e) => setSelectedMatFile(e.target.files?.[0])}
+                    className="input-field"
+                    style={{ paddingTop: '6px' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <textarea
+                placeholder="Descrição detalhada do conteúdo do material..."
+                className="input-field"
+                rows={3}
+                value={newMatDesc}
+                onChange={(e) => setNewMatDesc(e.target.value)}
+              />
+
+              <button type="submit" disabled={isUploadingMat} className="btn btn-primary" style={{ alignSelf: 'flex-start' }}>
+                <Upload size={16} /> {isUploadingMat ? 'Enviando para Supabase Storage...' : 'Enviar Apostila para o Acervo'}
+              </button>
+            </form>
+          </div>
+
+          <div className="glass-panel" style={{ padding: '20px' }}>
+            <h4 style={{ fontSize: '1rem', marginBottom: '14px' }}>Apostilas e Materiais no Acervo ({materialsList.length})</h4>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '14px' }}>
+              {materialsList.map((item) => (
+                <div key={item.id} style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: '10px' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span className="tag tag-cyan" style={{ fontSize: '0.68rem' }}>{item.category}</span>
+                      <button onClick={() => handleDeleteMaterial(item.id)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px', color: '#ef4444' }} title="Excluir Material">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                    <strong style={{ fontSize: '0.92rem', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>{item.title}</strong>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.description}</p>
+                  </div>
+                  <a href={item.file_url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ alignSelf: 'flex-start', fontSize: '0.75rem' }}>
+                    <Download size={13} /> Abrir Material
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
           AMBIENTE 3: GESTÃO DE GALERIA DE FOTOS
           ======================================================== */}
       {activeTab === 'gallery' && (
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div className="glass-panel" style={{ padding: '20px' }}>
             <div style={{ marginBottom: '14px' }}>

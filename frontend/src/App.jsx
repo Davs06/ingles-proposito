@@ -10,7 +10,9 @@ import StudentDashboard from './views/StudentDashboard';
 import VirtualClassroom from './views/VirtualClassroom';
 import SpeakingLab from './views/SpeakingLab';
 import ExchangeGallery from './views/ExchangeGallery';
+import StudyMaterials from './views/StudyMaterials';
 import TeacherDashboard from './views/TeacherDashboard';
+
 
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
 import { INITIAL_TRACKS, INITIAL_GALLERY } from './services/mockData';
@@ -357,9 +359,14 @@ export default function App() {
             element={<SpeakingLab />}
           />
           <Route
+            path="/aluno/materiais"
+            element={<StudyMaterials />}
+          />
+          <Route
             path="/aluno/galeria"
             element={<ExchangeGallery galleryItems={galleryItems} />}
           />
+
           <Route
             path="/aluno/aula"
             element={

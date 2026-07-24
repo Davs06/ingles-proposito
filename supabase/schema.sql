@@ -135,6 +135,17 @@ CREATE TABLE IF NOT EXISTS public.gallery_photos (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 10. MATERIAIS DE ESTUDO E APOSTILAS EM PDF/IMAGENS
+CREATE TABLE IF NOT EXISTS public.materials (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    title TEXT NOT NULL,
+    description TEXT,
+    file_url TEXT NOT NULL,
+    file_type TEXT NOT NULL DEFAULT 'pdf', -- 'pdf' | 'image'
+    category TEXT NOT NULL DEFAULT 'Apostila', -- 'Apostila', 'Exercício Extra', 'Vocabulário', 'Guia Gramatical'
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==========================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
@@ -147,6 +158,11 @@ ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_answers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.materials ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Leitura global de materiais" ON public.materials FOR SELECT USING (true);
+CREATE POLICY "Gestão de materiais por docentes" ON public.materials FOR ALL USING (public.is_teacher_or_admin());
+
 
 -- Auxiliar function para checar se o usuário é Professor/Admin
 CREATE OR REPLACE FUNCTION public.is_teacher_or_admin()

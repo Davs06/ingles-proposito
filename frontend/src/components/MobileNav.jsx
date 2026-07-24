@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BookOpen, Mic, Image as ImageIcon, Layers, FileCheck, Users, LayoutGrid } from 'lucide-react';
+import { BookOpen, Mic, Image as ImageIcon, Layers, FileCheck, Users, LayoutGrid, FileText } from 'lucide-react';
 
 export default function MobileNav() {
   const navigate = useNavigate();
@@ -49,6 +49,7 @@ export default function MobileNav() {
   }
 
   const isDashboard = pathname === '/aluno' || pathname === '/aluno/dashboard' || pathname.startsWith('/aluno/aula');
+  const isMaterials = pathname === '/aluno/materiais';
   const isSpeaking = pathname === '/aluno/speaking';
   const isGallery = pathname === '/aluno/galeria';
 
@@ -63,11 +64,19 @@ export default function MobileNav() {
       </button>
 
       <button
+        onClick={() => navigate('/aluno/materiais')}
+        className={`nav-item ${isMaterials ? 'active' : ''}`}
+      >
+        <FileText size={19} />
+        <span>Apostilas</span>
+      </button>
+
+      <button
         onClick={() => navigate('/aluno/speaking')}
         className={`nav-item ${isSpeaking ? 'active' : ''}`}
       >
         <Mic size={19} />
-        <span>Speaking IA</span>
+        <span>Speaking</span>
       </button>
 
       <button
@@ -80,5 +89,6 @@ export default function MobileNav() {
     </nav>
   );
 }
+
 
 

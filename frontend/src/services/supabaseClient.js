@@ -68,4 +68,56 @@ export const uploadImageToSupabase = async (file, bucketName = 'gallery-photos')
   }
 };
 
+/**
+ * Uploads a document/file (PDF or Image) to Supabase Storage ('lessons-pdf' bucket)
+ * Returns the public URL of the uploaded file.
+ */
+export const uploadFileToSupabase = async (file, bucketName = 'lessons-pdf') => {
+  if (!isSupabaseConfigured()) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (err) => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `materials/${fileName}`;
+
+    const { data, error } = await supabase.storage
+      .from(bucketName)
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type || 'application/pdf'
+      });
+
+    if (error) {
+      console.warn('Aviso no Supabase Storage Upload:', error.message);
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from(bucketName)
+      .getPublicUrl(filePath);
+
+    return publicUrlData.publicUrl;
+  } catch (err) {
+    console.warn('Erro ao processar arquivo no Supabase Storage:', err);
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  }
+};
+
+
 
