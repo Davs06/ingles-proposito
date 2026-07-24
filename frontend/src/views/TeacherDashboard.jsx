@@ -95,10 +95,13 @@ export default function TeacherDashboard({
       try {
         finalImageUrl = await uploadImageToSupabase(selectedPhotoFile, 'gallery-photos');
       } catch (err) {
-        console.error('Erro no upload para Supabase Storage:', err);
-        alert('Ocorreu um erro ao enviar a imagem para o Supabase Storage. Verifique sua conexão.');
-        setIsUploadingPhoto(false);
-        return;
+        console.warn('Erro no upload:', err);
+        // Fallback local FileReader
+        finalImageUrl = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.readAsDataURL(selectedPhotoFile);
+        });
       } finally {
         setIsUploadingPhoto(false);
       }
@@ -124,8 +127,9 @@ export default function TeacherDashboard({
     setNewPhotoUrl('');
     setSelectedPhotoFile(null);
     setPhotoPreview(null);
-    alert('Foto enviada e adicionada com sucesso!');
+    alert('Foto adicionada com sucesso à Galeria!');
   };
+
 
 
   const handleDeletePhoto = (photoId) => {
