@@ -1,17 +1,17 @@
 {
-  "name": "Inglês com Propósito — PIB São Miguel",
-  "short_name": "Inglês Propósito",
+  "name": "Propósito do Inglês — PIB São Miguel",
+  "short_name": "Propósito Inglês",
   "description": "Plataforma de aprendizado de inglês, speaking com IA e homeworks da PIB São Miguel Paulista",
   "start_url": "/aluno",
   "display": "standalone",
   "background_color": "#0f172a",
-  "theme_color": "#2563eb",
+  "theme_color": "#8b5cf6",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/pwa-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]

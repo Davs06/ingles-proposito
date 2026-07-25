@@ -85,7 +85,7 @@ export default function StudyMaterials() {
         </div>
         <h2 style={{ fontSize: '1.45rem', marginBottom: '6px' }}>Materiais Didáticos & Apostilas em PDF</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '650px', lineHeight: '1.5' }}>
-          Acesse e faça o download das apostilas oficiais, guias gramaticais, tabelas de vocabulário e exercícios de apoio do projeto <strong>Inglês com Propósito — PIB São Miguel</strong>.
+          Acesse e faça o download das apostilas oficiais, guias gramaticais, tabelas de vocabulário e exercícios de apoio do projeto <strong>Propósito do Inglês — PIB São Miguel</strong>.
         </p>
       </div>
 

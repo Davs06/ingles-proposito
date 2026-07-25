@@ -29,7 +29,7 @@ export default function ExchangeGallery({ galleryItems }) {
         </div>
         <h2 style={{ fontSize: '1.4rem' }}>Galeria de Visitas e Eventos da Escola</h2>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px', lineHeight: '1.4' }}>
-          Registros das interações entre alunos do projeto <strong>Inglês com Propósito</strong> e voluntários parceiros.
+          Registros das interações entre alunos do projeto <strong>Propósito do Inglês</strong> e voluntários parceiros.
         </p>
       </div>
 

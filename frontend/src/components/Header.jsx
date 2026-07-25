@@ -91,9 +91,9 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
         setPushEnabled(true);
         if ('serviceWorker' in navigator) {
           const reg = await navigator.serviceWorker.ready;
-          reg.showNotification('Inglês com Propósito 🔔', {
+          reg.showNotification('Propósito do Inglês 🔔', {
             body: 'Notificações na Tela de Bloqueio ativadas com sucesso! Você receberá avisos de novos homeworks.',
-            icon: '/pwa-192.png',
+            icon: '/icon.svg',
             vibrate: [200, 100, 200]
           });
         }
@@ -135,11 +135,11 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
             flexShrink: 0
           }}
         >
-          IP
+          PI
         </div>
         <div style={{ minWidth: 0 }}>
           <h1 className="brand-title-heading">
-            Inglês com <span style={{ color: 'var(--accent-primary)' }}>Propósito</span>
+            Propósito do <span style={{ color: 'var(--accent-primary)' }}>Inglês</span>
           </h1>
           <div className="brand-subtitle" style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700', whiteSpace: 'nowrap' }}>
             PIB São Miguel Paulista

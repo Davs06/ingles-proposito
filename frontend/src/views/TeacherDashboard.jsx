@@ -587,7 +587,7 @@ export default function TeacherDashboard({
                 </span>
               )}
             </div>
-            <h2 style={{ fontSize: '1.4rem' }}>Inglês com Propósito — PIB São Miguel</h2>
+            <h2 style={{ fontSize: '1.4rem' }}>Propósito do Inglês — PIB São Miguel</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '2px', maxWidth: '600px' }}>
               Navegue entre os ambientes de ensino para gerenciar conteúdos, atividades, intercâmbios e progresso dos estudantes.
             </p>
@@ -1335,7 +1335,7 @@ export default function TeacherDashboard({
             <div style={{ background: 'var(--bg-secondary)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <strong style={{ fontSize: '0.9rem', color: 'var(--text-primary)', display: 'block' }}>Unidade Responsável</strong>
               <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Primeira Igreja Batista em São Miguel Paulista — Projeto Inglês com Propósito
+                Primeira Igreja Batista em São Miguel Paulista — Projeto Propósito do Inglês
               </p>
             </div>
 

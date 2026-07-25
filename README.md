@@ -1,4 +1,4 @@
-# 🎓 Inglês com Propósito | PIB São Miguel Paulista
+# 🎓 Propósito do Inglês | PIB São Miguel Paulista
 
 > Plataforma educacional de alto impacto social, 100% gratuita para alunos da comunidade, promovida pela **Primeira Igreja Batista de São Miguel Paulista (PIB SMP)**.
 
@@ -6,7 +6,7 @@
 
 ## 📌 Visão Geral
 
-O **Inglês com Propósito** é uma plataforma dividida em dois ambientes integrados:
+O **Propósito do Inglês** é uma plataforma dividida em dois ambientes integrados:
 1. **Módulo do Aluno (PWA Mobile-First)**: Experiência fluida para consumo de videoaulas, leitura de apostilas, resolução de homeworks e prática de conversação/pronúncia impulsionada por **Inteligência Artificial (Google Gemini)**.
 2. **Painel do Professor/Admin (Dashboard Desktop-First)**: Gestão de ensino completa (CRUD de trilhas, cadastro de videoaulas do YouTube, upload de apostilas em PDF e construtor dinâmico de exercícios).
 

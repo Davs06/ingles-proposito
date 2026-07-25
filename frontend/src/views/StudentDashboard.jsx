@@ -25,7 +25,7 @@ export default function StudentDashboard({ tracks, progress, onSelectLesson, onO
             <div className="tag tag-blue" style={{ marginBottom: '6px' }}>
               <Award size={12} /> PIB São Miguel Paulista • 100% Gratuito
             </div>
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Inglês com Propósito</h2>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '4px' }}>Propósito do Inglês</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '550px', lineHeight: '1.4' }}>
               Desenvolva sua fluência em inglês com videoaulas, materiais em PDF e laboratório de speaking impulsionado por Inteligência Artificial.
             </p>

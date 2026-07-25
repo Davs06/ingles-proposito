@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-
 import { Shield, Lock } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
+import PwaInstallPrompt from './components/PwaInstallPrompt';
 
 import MobileNav from './components/MobileNav';
 import AuthModal from './components/AuthModal';
@@ -325,6 +326,7 @@ export default function App() {
 
   return (
     <div className="app-container">
+      <PwaInstallPrompt />
       <Header
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}

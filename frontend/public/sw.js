@@ -4,14 +4,14 @@ self.addEventListener('push', function(event) {
   try {
     data = event.data ? event.data.json() : {};
   } catch (e) {
-    data = { title: 'Inglês com Propósito 📝', message: event.data ? event.data.text() : 'Novo Homework Disponível!' };
+    data = { title: 'Propósito do Inglês 📝', message: event.data ? event.data.text() : 'Novo Homework Disponível!' };
   }
 
-  const title = data.title || 'Inglês com Propósito 📝';
+  const title = data.title || 'Propósito do Inglês 📝';
   const options = {
     body: data.message || 'Novo exercício cadastrado pelo professor. Acesse para responder!',
-    icon: '/pwa-192.png',
-    badge: '/pwa-192.png',
+    icon: '/icon.svg',
+    badge: '/icon.svg',
     vibrate: [200, 100, 200],
     tag: 'homework-notification',
     renotify: true,
