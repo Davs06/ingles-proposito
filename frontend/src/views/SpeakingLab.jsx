@@ -2,7 +2,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send, Zap, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000/api';
+const getBackendUrl = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host !== 'localhost' && host !== '127.0.0.1') {
+      // Na VPS (ex: ingles.techrocket.site), sempre usa o endpoint relativo /api da VPS
+      return `${window.location.origin}/api`;
+    }
+  }
+  return import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000/api';
+};
+
+const BACKEND_URL = getBackendUrl();
 
 const DEFAULT_SENTENCES = [
   { id: 1, text: "Hello! My name is Alex and I am learning English.", level: "Básico" },
@@ -58,11 +69,23 @@ export default function SpeakingLab() {
       rec.lang = 'en-US';
 
       rec.onresult = (event) => {
-        let transcript = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
+
         for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript + ' ';
+          } else {
+            interimTranscript += result[0].transcript;
+          }
         }
-        setUserTranscript(transcript);
+
+        const cleanTranscript = (finalTranscript + interimTranscript)
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        setUserTranscript(cleanTranscript);
       };
 
       rec.onerror = (err) => {

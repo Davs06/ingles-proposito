@@ -1,15 +1,25 @@
 // Service Worker Oficial para PWA, Cache e Notificações Push na Tela de Bloqueio
 
-const CACHE_NAME = 'proposito-ingles-cache-v1';
+const CACHE_NAME = 'proposito-ingles-cache-v2';
 
 // 1. Instalação do Service Worker
 self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// 2. Ativação do Service Worker
+// 2. Ativação do Service Worker com Limpeza Automática de Cache Antigo
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cache) => {
+          if (cache !== CACHE_NAME) {
+            return caches.delete(cache);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
 // 3. Interceptador de Fetch (Requisito obrigatório do Chrome/Android para validação PWA)
