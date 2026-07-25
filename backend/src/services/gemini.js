@@ -9,7 +9,12 @@ dotenv.config();
 export const CHAT_SYSTEM_INSTRUCTION = `You are a friendly, encouraging native English conversational partner for Brazilian students learning English.
 Keep your responses simple, natural, and engaging (1-3 sentences).
 Always end with a simple follow-up question to keep the conversation flowing.
-Provide a quick Portuguese hint or vocabulary tip in parentheses if helpful.`;
+Provide a quick Portuguese hint or vocabulary tip in parentheses if helpful.
+
+STRICT CONTENT SAFETY RULES:
+- NEVER discuss or mention politics, elections, politicians, political parties, or controversial social/ideological debates.
+- Keep all topics strictly educational, positive, family-friendly, and neutral (such as daily routines, hobbies, food, travel, work, studies, nature, and sports).
+- Politely redirect to safe educational topics if asked about controversial issues.`;
 
 /**
  * Obtém dinamicamente o cliente Gemini com a chave do ambiente
@@ -243,5 +248,126 @@ export async function chatSpeaking({ history = [], userMessage }) {
 
     return generateFallbackChatResponse(userMessage, isQuotaExceeded);
   }
+}
+
+// Banco de frases semanais pré-programados para rotação automática em fallback
+const WEEKLY_SENTENCES_POOL = [
+  {
+    theme: "Apresentação Pessoal & Rotina",
+    sentences: [
+      { id: 1, text: "Good morning! I am studying English to improve my career opportunities.", level: "Básico" },
+      { id: 2, text: "I usually drink coffee in the morning before starting my daily activities.", level: "Intermediário" },
+      { id: 3, text: "Developing strong communication skills in English opens up many global opportunities.", level: "Avançado" }
+    ]
+  },
+  {
+    theme: "Viagens & Intercâmbio",
+    sentences: [
+      { id: 1, text: "Where is the nearest bus station? I need to catch a ride.", level: "Básico" },
+      { id: 2, text: "Could you please tell me how much a round-trip ticket to New York costs?", level: "Intermediário" },
+      { id: 3, text: "Traveling to different countries allows you to experience diverse cultures and perspectives.", level: "Avançado" }
+    ]
+  },
+  {
+    theme: "Trabalho & Profissão",
+    sentences: [
+      { id: 1, text: "I work with a friendly team and we collaborate every day.", level: "Básico" },
+      { id: 2, text: "Our team meeting is scheduled for two o'clock in the afternoon.", level: "Intermediário" },
+      { id: 3, text: "Effectively managing time and priorities is essential for career success.", level: "Avançado" }
+    ]
+  },
+  {
+    theme: "Alimentação & Gastronomia",
+    sentences: [
+      { id: 1, text: "I would like to order a glass of water and some fresh salad, please.", level: "Básico" },
+      { id: 2, text: "Could we have the check, please? Everything was delicious tonight.", level: "Intermediário" },
+      { id: 3, text: "Exploring traditional cuisines from around the world is one of my favorite hobbies.", level: "Avançado" }
+    ]
+  },
+  {
+    theme: "Tecnologia & Inovação",
+    sentences: [
+      { id: 1, text: "I use my computer and smartphone to learn new things every day.", level: "Básico" },
+      { id: 2, text: "Artificial intelligence is changing the way students practice speaking languages.", level: "Intermediário" },
+      { id: 3, text: "Leveraging digital tools effectively allows learners to progress much faster in their studies.", level: "Avançado" }
+    ]
+  }
+];
+
+let cachedWeeklySentences = null;
+let cachedWeekKey = null;
+
+function getWeekKey() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const firstJan = new Date(year, 0, 1);
+  const dayNum = Math.floor((d - firstJan) / (24 * 60 * 60 * 1000));
+  const weekNum = Math.ceil((dayNum + firstJan.getDay() + 1) / 7);
+  return `${year}-W${weekNum}`;
+}
+
+/**
+ * Gera dinamicamente ou rotaciona frases semanais para o Speaking Lab
+ */
+export async function getWeeklySentences() {
+  const weekKey = getWeekKey();
+
+  if (cachedWeeklySentences && cachedWeekKey === weekKey) {
+    return cachedWeeklySentences;
+  }
+
+  const { genAI, apiKey } = getGenAI();
+
+  if (genAI && apiKey) {
+    try {
+      const model = getGenerativeModel(genAI, {
+        generationConfig: { responseMimeType: 'application/json' }
+      });
+
+      const prompt = `
+Você é um professor nativo de inglês que cria conteúdos educativos e seguros para alunos de um projeto social e comunitário.
+Gere 3 frases inéditas e práticas em inglês para alunos brasileiros treinarem pronúncia nesta semana (${weekKey}).
+As frases devem estar organizadas por nível de dificuldade (Básico, Intermediário e Avançado).
+
+REGRAS E TRAVAS DE SEGURANÇA ESTRITAS:
+- É ESTRITAMENTE PROIBIDO abordar temas políticos, ideológicos, partidos, eleições, políticos ou qualquer polêmica/controvérsia social.
+- Os temas e frases devem ser 100% neutros, educativos, positivos e focados no cotidiano (ex: Tecnologia & Inovação, Viagens & Cultura, Trabalho & Profissões, Gastronomia, Esportes, Natureza, Hábitos Diários, Estudos).
+
+Retorne APENAS um objeto JSON no seguinte formato estrito:
+{
+  "theme": "Nome do Tema da Semana em Português (ex: Tecnologia, Viagens, Gastronomia, Trabalho)",
+  "week": "${weekKey}",
+  "sentences": [
+    { "id": 1, "text": "Frase básica clara em inglês...", "level": "Básico" },
+    { "id": 2, "text": "Frase intermediária em inglês...", "level": "Intermediário" },
+    { "id": 3, "text": "Frase avançada e expressiva em inglês...", "level": "Avançado" }
+  ]
+}
+`;
+
+      const response = await model.generateContent(prompt);
+      const data = JSON.parse(response.response.text());
+
+      if (data && Array.isArray(data.sentences) && data.sentences.length === 3) {
+        cachedWeeklySentences = data;
+        cachedWeekKey = weekKey;
+        return data;
+      }
+    } catch (err) {
+      console.warn('Fallback para banco de frases semanal:', err.message);
+    }
+  }
+
+  // Fallback determinístico baseado na semana do ano se a API Gemini falhar ou estiver sem chave
+  const weekNum = parseInt(weekKey.split('-W')[1] || '1', 10);
+  const poolIndex = (weekNum - 1) % WEEKLY_SENTENCES_POOL.length;
+  const fallbackData = {
+    week: weekKey,
+    ...WEEKLY_SENTENCES_POOL[poolIndex]
+  };
+
+  cachedWeeklySentences = fallbackData;
+  cachedWeekKey = weekKey;
+  return fallbackData;
 }
 

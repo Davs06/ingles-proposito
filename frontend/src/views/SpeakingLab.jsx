@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send, Zap } from 'lucide-react';
+import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send, Zap, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000/api';
 
-const PRACTICE_SENTENCES = [
+const DEFAULT_SENTENCES = [
   { id: 1, text: "Hello! My name is Alex and I am learning English.", level: "Básico" },
   { id: 2, text: "Welcome to our school. We are excited to meet you today!", level: "Intermediário" },
   { id: 3, text: "Could you tell me more about your experience living in the United States?", level: "Avançado" }
@@ -12,7 +12,9 @@ const PRACTICE_SENTENCES = [
 
 export default function SpeakingLab() {
   const [activeMode, setActiveMode] = useState('read');
-  const [selectedSentence, setSelectedSentence] = useState(PRACTICE_SENTENCES[0]);
+  const [practiceSentences, setPracticeSentences] = useState(DEFAULT_SENTENCES);
+  const [weeklyTheme, setWeeklyTheme] = useState(null);
+  const [selectedSentence, setSelectedSentence] = useState(DEFAULT_SENTENCES[0]);
   const [isListening, setIsListening] = useState(false);
   const [userTranscript, setUserTranscript] = useState('');
   const [evaluating, setEvaluating] = useState(false);
@@ -25,19 +27,39 @@ export default function SpeakingLab() {
   const [chatLoading, setChatLoading] = useState(false);
   const [isFallbackMode, setIsFallbackMode] = useState(false);
 
+  // Carrega as frases dinâmicas geradas semanalmente pela IA
+  useEffect(() => {
+    async function loadWeeklySentences() {
+      try {
+        const response = await fetch(`${BACKEND_URL}/speaking/sentences`);
+        const resData = await response.json();
+        if (resData.success && resData.data?.sentences?.length > 0) {
+          setPracticeSentences(resData.data.sentences);
+          setSelectedSentence(resData.data.sentences[0]);
+          if (resData.data.theme) {
+            setWeeklyTheme(resData.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Erro ao buscar frases semanais da IA:', err);
+      }
+    }
+    loadWeeklySentences();
+  }, []);
+
   const recognitionRef = useRef(null);
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       const rec = new SpeechRecognition();
-      rec.continuous = false;
+      rec.continuous = true; // Permite pausas no meio da frase sem interromper
       rec.interimResults = true;
       rec.lang = 'en-US';
 
       rec.onresult = (event) => {
         let transcript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        for (let i = 0; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript;
         }
         setUserTranscript(transcript);
@@ -56,20 +78,33 @@ export default function SpeakingLab() {
     }
   }, []);
 
-  const toggleListening = () => {
+  const startHoldListening = (e) => {
+    if (e && e.cancelable) e.preventDefault();
     if (!recognitionRef.current) {
       toast.error('Seu navegador não suporta a Web Speech API nativa. Recomendamos utilizar Google Chrome ou Edge.');
       return;
     }
+    if (isListening) return;
 
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      setUserTranscript('');
-      setEvalResult(null);
+    setUserTranscript('');
+    setEvalResult(null);
+    try {
       recognitionRef.current.start();
       setIsListening(true);
+    } catch (err) {
+      console.warn('Erro ao iniciar gravação:', err);
+    }
+  };
+
+  const stopHoldListening = (e) => {
+    if (e && e.cancelable) e.preventDefault();
+    if (recognitionRef.current && isListening) {
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.warn('Erro ao parar gravação:', err);
+      }
+      setIsListening(false);
     }
   };
 
@@ -202,10 +237,17 @@ export default function SpeakingLab() {
       {activeMode === 'read' ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
           <div className="glass-panel" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '1.05rem', marginBottom: '12px' }}>Selecione uma Frase para Treinar:</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+              <h3 style={{ fontSize: '1.05rem' }}>Selecione uma Frase para Treinar:</h3>
+              {weeklyTheme && (
+                <div className="tag tag-purple" style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                  <Calendar size={13} /> {weeklyTheme.theme} ({weeklyTheme.week})
+                </div>
+              )}
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              {PRACTICE_SENTENCES.map((sent) => (
+              {practiceSentences.map((sent) => (
                 <div
                   key={sent.id}
                   onClick={() => {
@@ -257,28 +299,37 @@ export default function SpeakingLab() {
               </h4>
 
               <button
-                onClick={toggleListening}
-                className={`pulse-animation`}
+                onMouseDown={startHoldListening}
+                onMouseUp={stopHoldListening}
+                onMouseLeave={stopHoldListening}
+                onTouchStart={startHoldListening}
+                onTouchEnd={stopHoldListening}
+                onTouchCancel={stopHoldListening}
                 style={{
-                  width: '64px',
-                  height: '64px',
+                  width: '72px',
+                  height: '72px',
                   borderRadius: '50%',
-                  border: 'none',
-                  background: isListening ? '#ef4444' : 'var(--accent-primary)',
+                  border: isListening ? '3px solid #ef4444' : 'none',
+                  background: isListening ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, var(--accent-purple), var(--accent-primary))',
                   color: '#fff',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  boxShadow: 'var(--shadow-glow)',
-                  marginBottom: '12px'
+                  boxShadow: isListening ? '0 0 25px rgba(239, 68, 68, 0.6)' : 'var(--shadow-glow)',
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  touchAction: 'none',
+                  marginBottom: '12px',
+                  transform: isListening ? 'scale(1.1)' : 'scale(1)',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}
               >
-                {isListening ? <MicOff size={28} /> : <Mic size={28} />}
+                <Mic size={30} />
               </button>
 
-              <div style={{ fontSize: '0.82rem', color: isListening ? '#ef4444' : 'var(--text-muted)', fontWeight: '600' }}>
-                {isListening ? 'Ouvindo... Fale agora!' : 'Clique para começar a gravar'}
+              <div style={{ fontSize: '0.85rem', color: isListening ? '#ef4444' : 'var(--text-primary)', fontWeight: '700' }}>
+                {isListening ? '🔴 Gravação ativa — Solte o botão quando terminar!' : '👆 SEGURE o botão para falar'}
               </div>
 
               {userTranscript && (

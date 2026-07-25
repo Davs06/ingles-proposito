@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { evaluateSpeaking, chatSpeaking } from './services/gemini.js';
+import { evaluateSpeaking, chatSpeaking, getWeeklySentences } from './services/gemini.js';
 
 dotenv.config();
 
@@ -21,6 +21,17 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     geminiConfigured: !!process.env.GEMINI_API_KEY
   });
+});
+
+// Endpoint: Frases Dinâmicas da Semana via Gemini IA
+app.get('/api/speaking/sentences', async (req, res) => {
+  try {
+    const data = await getWeeklySentences();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Erro em /api/speaking/sentences:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 // Endpoint: Avaliação de Pronúncia/Speaking via Gemini AI
