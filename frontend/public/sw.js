@@ -1,4 +1,32 @@
-// Service Worker para Notificações Push na Tela de Bloqueio (Web Push & PWA)
+// Service Worker Oficial para PWA, Cache e Notificações Push na Tela de Bloqueio
+
+const CACHE_NAME = 'proposito-ingles-cache-v1';
+
+// 1. Instalação do Service Worker
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+// 2. Ativação do Service Worker
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// 3. Interceptador de Fetch (Requisito obrigatório do Chrome/Android para validação PWA)
+self.addEventListener('fetch', (event) => {
+  // Ignora requisições de API/backend para permitir chamadas dinâmicas
+  if (event.request.url.includes('/api/')) {
+    return;
+  }
+  
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
+    })
+  );
+});
+
+// 4. Notificações Push na Tela de Bloqueio (Web Push & PWA)
 self.addEventListener('push', function(event) {
   let data = {};
   try {
@@ -10,8 +38,8 @@ self.addEventListener('push', function(event) {
   const title = data.title || 'Propósito do Inglês 📝';
   const options = {
     body: data.message || 'Novo exercício cadastrado pelo professor. Acesse para responder!',
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/pwa-192.png',
+    badge: '/pwa-192.png',
     vibrate: [200, 100, 200],
     tag: 'homework-notification',
     renotify: true,

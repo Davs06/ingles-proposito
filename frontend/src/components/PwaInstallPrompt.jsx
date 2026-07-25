@@ -62,14 +62,9 @@ export default function PwaInstallPrompt() {
         setIsVisible(false);
       }
       setDeferredPrompt(null);
-    } else if (isIos) {
-      // Exibe instrução amigável de como adicionar na tela inicial do iOS Safari
-      setShowIosInstructions(true);
     } else {
-      toast('Para instalar, clique nos 3 pontos do navegador e selecione "Adicionar à Tela Inicial".', {
-        icon: '📲'
-      });
-      setIsVisible(false);
+      // Exibe instrução de como adicionar na tela inicial se o evento nativo for bloqueado pelo navegador (ex: HTTP)
+      setShowIosInstructions(true);
     }
   };
 
@@ -204,13 +199,21 @@ export default function PwaInstallPrompt() {
         /* Instruções Específicas para iPhone/iOS Safari */
         <div style={{ marginTop: '14px', background: 'var(--bg-secondary)', padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
           <div style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Share size={15} color="#3b82f6" /> Passos para instalar no iPhone (Safari):
+            <Share size={15} color="#3b82f6" /> {isIos ? 'Passos para instalar no iPhone (Safari):' : 'Como adicionar o app à sua Tela Inicial:'}
           </div>
-          <ol style={{ paddingLeft: '20px', fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <li>Toque no botão <strong>Compartilhar</strong> <Share size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> na barra inferior do Safari.</li>
-            <li>Role a lista de opções para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <PlusSquare size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />.</li>
-            <li>Confirme clicando em <strong>"Adicionar"</strong> no canto superior direito.</li>
-          </ol>
+          {isIos ? (
+            <ol style={{ paddingLeft: '20px', fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li>Toque no botão <strong>Compartilhar</strong> <Share size={13} style={{ display: 'inline', verticalAlign: 'middle' }} /> na barra inferior do Safari.</li>
+              <li>Role a lista de opções para baixo e toque em <strong>"Adicionar à Tela de Início"</strong> <PlusSquare size={13} style={{ display: 'inline', verticalAlign: 'middle' }} />.</li>
+              <li>Confirme clicando em <strong>"Adicionar"</strong> no canto superior direito.</li>
+            </ol>
+          ) : (
+            <ol style={{ paddingLeft: '20px', fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <li>Clique nos <strong>3 pontinhos (⋮)</strong> no menu do seu navegador (canto superior direito).</li>
+              <li>Selecione a opção <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à Tela Inicial"</strong>.</li>
+              <li>Confirme para criar o ícone do <strong>Propósito do Inglês</strong> no seu celular/computador!</li>
+            </ol>
+          )}
           <button
             onClick={handleDismiss}
             className="btn btn-primary btn-sm"
