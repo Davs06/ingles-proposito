@@ -356,7 +356,7 @@ export default function App() {
           />
           <Route
             path="/aluno/speaking"
-            element={<SpeakingLab />}
+            element={<SpeakingLab user={user} />}
           />
           <Route
             path="/aluno/materiais"

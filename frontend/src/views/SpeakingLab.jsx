@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send } from 'lucide-react';
+import { Mic, MicOff, Volume2, Sparkles, MessageSquare, Award, Send, Zap } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000/api';
-
 
 const PRACTICE_SENTENCES = [
   { id: 1, text: "Hello! My name is Alex and I am learning English.", level: "Básico" },
@@ -24,6 +23,7 @@ export default function SpeakingLab() {
   ]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
 
   const recognitionRef = useRef(null);
 
@@ -58,11 +58,9 @@ export default function SpeakingLab() {
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
-
       toast.error('Seu navegador não suporta a Web Speech API nativa. Recomendamos utilizar Google Chrome ou Edge.');
       return;
     }
-
 
     if (isListening) {
       recognitionRef.current.stop();
@@ -143,12 +141,17 @@ export default function SpeakingLab() {
       if (resData.success && resData.data?.reply) {
         setChatMessages((prev) => [...prev, { role: 'model', content: resData.data.reply }]);
         playNativeAudio(resData.data.reply);
+
+        if (resData.data.isQuotaExceeded) {
+          setIsFallbackMode(true);
+        }
       }
     } catch (err) {
       setChatMessages((prev) => [
         ...prev,
-        { role: 'model', content: `That's great! Keep practicing speaking out loud every day.` }
+        { role: 'model', content: `That sounds interesting! Keep practicing speaking out loud every day.` }
       ]);
+      setIsFallbackMode(true);
     } finally {
       setChatLoading(false);
     }
@@ -341,6 +344,14 @@ export default function SpeakingLab() {
         </div>
       ) : (
         <div className="glass-panel" style={{ padding: '16px', height: '480px', display: 'flex', flexDirection: 'column' }}>
+          
+          {/* Indicador discreto de Fallback se a cota do Gemini atingir o limite */}
+          {isFallbackMode && (
+            <div style={{ padding: '6px 12px', background: 'rgba(245, 158, 11, 0.12)', border: '1px solid #f59e0b', borderRadius: '8px', marginBottom: '10px', fontSize: '0.75rem', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Zap size={14} /> Modo Prática de Conversação Contínua (IA respondendo em modo inteligente)
+            </div>
+          )}
+
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', paddingRight: '4px' }}>
             {chatMessages.map((msg, index) => (
               <div
@@ -384,7 +395,12 @@ export default function SpeakingLab() {
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
             />
-            <button type="submit" className="btn btn-primary" style={{ padding: '10px 16px' }} disabled={chatLoading || !chatInput.trim()}>
+            <button 
+              type="submit" 
+              className="btn btn-primary" 
+              style={{ padding: '10px 16px' }} 
+              disabled={chatLoading || !chatInput.trim()}
+            >
               <Send size={15} />
             </button>
           </form>
@@ -393,4 +409,7 @@ export default function SpeakingLab() {
     </div>
   );
 }
+
+
+
 
