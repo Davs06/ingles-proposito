@@ -120,13 +120,30 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
   return (
     <header className="top-navbar">
       <Link to="/aluno" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
+        <img
+          src="/proposito do ingles.jpg"
+          alt="Propósito do Inglês Logo"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            if (e.target.nextSibling) {
+              e.target.nextSibling.style.display = 'flex';
+            }
+          }}
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            objectFit: 'cover',
+            flexShrink: 0
+          }}
+        />
         <div 
           style={{ 
             width: '36px', 
             height: '36px', 
             borderRadius: '10px', 
             background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', 
-            display: 'flex', 
+            display: 'none', 
             alignItems: 'center', 
             justifyContent: 'center',
             color: '#fff',

@@ -73,37 +73,65 @@ export default function TeacherDashboard({
     loadMat();
   }, []);
 
-  // Fetch real Students from profiles table in Supabase
+  const allLessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
+
+  // Fetch real Students from profiles & user_progress table in Supabase
   const [students, setStudents] = useState([]);
 
   React.useEffect(() => {
     async function loadStudentsFromDb() {
       if (!isSupabaseConfigured()) return;
       try {
-        const { data } = await supabase
+        const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, full_name, email, role, docente, created_at')
           .eq('role', 'student');
-        if (data) {
-          setStudents(
-            data.map((st) => ({
-              id: st.id,
-              name: st.full_name || st.email.split('@')[0],
-              email: st.email,
-              progress: 0,
-              speakingScore: 0,
-              status: 'Ativo'
-            }))
-          );
-        }
+
+        if (!profilesData) return;
+
+        const { data: progressData } = await supabase
+          .from('user_progress')
+          .select('user_id, completed, score');
+
+        const totalLessonsCount = allLessons.length;
+
+        const formattedStudents = profilesData.map((st) => {
+          const studentProgressItems = (progressData || []).filter((p) => p.user_id === st.id);
+          const completedLessonsCount = studentProgressItems.filter((p) => p.completed).length;
+
+          const progressPct = totalLessonsCount > 0
+            ? Math.round((completedLessonsCount / totalLessonsCount) * 100)
+            : 0;
+
+          const scoredItems = studentProgressItems.filter((p) => p.score > 0);
+          const avgScore = scoredItems.length > 0
+            ? Math.round(scoredItems.reduce((sum, item) => sum + item.score, 0) / scoredItems.length)
+            : 0;
+
+          let status = 'Ativo';
+          if (progressPct === 100 && totalLessonsCount > 0) {
+            status = 'Concluído';
+          } else if (completedLessonsCount > 0) {
+            status = 'Em Andamento';
+          }
+
+          return {
+            id: st.id,
+            name: st.full_name || st.email.split('@')[0],
+            email: st.email,
+            progress: progressPct,
+            speakingScore: avgScore,
+            status
+          };
+        });
+
+        setStudents(formattedStudents);
       } catch (err) {
-        console.warn('Erro ao carregar alunos do banco:', err);
+        console.warn('Erro ao carregar alunos e progresso do banco:', err);
       }
     }
     loadStudentsFromDb();
-  }, []);
-
-  const allLessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
+  }, [allLessons.length]);
 
   // Handlers for Batch Photo Upload
   const handlePhotoFileSelect = (e) => {
@@ -1292,11 +1320,15 @@ export default function TeacherDashboard({
               </div>
               <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Progresso Médio</span>
-                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>60%</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-success)' }}>
+                  {students.length > 0 ? Math.round(students.reduce((acc, s) => acc + (s.progress || 0), 0) / students.length) : 0}%
+                </div>
               </div>
               <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Média Speaking IA</span>
-                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-purple)' }}>78 pts</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-purple)' }}>
+                  {students.length > 0 ? Math.round(students.reduce((acc, s) => acc + (s.speakingScore || 0), 0) / students.length) : 0} pts
+                </div>
               </div>
             </div>
 

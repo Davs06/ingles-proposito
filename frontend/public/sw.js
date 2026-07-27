@@ -1,6 +1,6 @@
 // Service Worker Oficial para PWA, Cache e Notificações Push na Tela de Bloqueio
 
-const CACHE_NAME = 'proposito-ingles-cache-v2';
+const CACHE_NAME = 'proposito-ingles-cache-v3';
 
 // 1. Instalação do Service Worker
 self.addEventListener('install', (event) => {

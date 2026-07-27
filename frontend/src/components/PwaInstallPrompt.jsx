@@ -106,12 +106,14 @@ export default function PwaInstallPrompt() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img
-            src="/icon.svg"
+            src="/proposito do ingles.jpg"
             alt="App Logo"
+            onError={(e) => { e.target.src = '/icon.svg'; }}
             style={{
               width: '46px',
               height: '46px',
               borderRadius: '12px',
+              objectFit: 'cover',
               boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
               background: '#0f172a',
               flexShrink: 0
