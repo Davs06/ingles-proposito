@@ -42,6 +42,12 @@ docker push ${DOCKER_USER}/ingles-proposito-frontend:latest
 
 echo ""
 echo "========================================================"
+echo "Aguardando 20 segundos para a propagação no Docker Hub..."
+echo "========================================================"
+sleep 20 # <--- ISSO VAI SALVAR A SUA AUTOMAÇÃO
+
+echo ""
+echo "========================================================"
 echo "Avisando o Portainer para atualizar a Stack..."
 echo "========================================================"
 curl -X POST "${WEBHOOK_URL}"
