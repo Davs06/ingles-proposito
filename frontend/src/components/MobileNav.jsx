@@ -2,9 +2,12 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { BookOpen, Mic, Image as ImageIcon, Layers, FileCheck, Users, LayoutGrid, FileText } from 'lucide-react';
 
-export default function MobileNav() {
+export default function MobileNav({ user }) {
   const navigate = useNavigate();
   const location = useLocation();
+
+  if (!user) return null;
+
   const pathname = location.pathname;
   const isTeacher = pathname.startsWith('/professor');
 
@@ -89,6 +92,3 @@ export default function MobileNav() {
     </nav>
   );
 }
-
-
-

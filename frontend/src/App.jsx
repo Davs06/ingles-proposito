@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock, Loader2 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import Header from './components/Header';
 import PwaInstallPrompt from './components/PwaInstallPrompt';
 
 import MobileNav from './components/MobileNav';
 import AuthModal from './components/AuthModal';
+import LoginLanding from './views/LoginLanding';
 import StudentDashboard from './views/StudentDashboard';
 import VirtualClassroom from './views/VirtualClassroom';
 import SpeakingLab from './views/SpeakingLab';
@@ -14,9 +15,7 @@ import ExchangeGallery from './views/ExchangeGallery';
 import StudyMaterials from './views/StudyMaterials';
 import TeacherDashboard from './views/TeacherDashboard';
 
-
 import { supabase, isSupabaseConfigured } from './services/supabaseClient';
-import { INITIAL_TRACKS, INITIAL_GALLERY } from './services/mockData';
 
 // Carrega o perfil do usuário a partir da tabela 'profiles' do banco de dados Supabase
 async function fetchUserProfileFromDb(supabaseUser) {
@@ -146,6 +145,7 @@ export default function App() {
   const location = useLocation();
 
   const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
 
@@ -164,6 +164,7 @@ export default function App() {
           const profile = await fetchUserProfileFromDb(session.user);
           setUser(profile);
         }
+        setAuthLoading(false);
       });
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -173,9 +174,12 @@ export default function App() {
         } else {
           setUser(null);
         }
+        setAuthLoading(false);
       });
 
       return () => subscription.unsubscribe();
+    } else {
+      setAuthLoading(false);
     }
   }, []);
 
@@ -184,7 +188,7 @@ export default function App() {
     async function loadGalleryFromDb() {
       if (!isSupabaseConfigured()) return;
       try {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('gallery_photos')
           .select('*')
           .order('created_at', { ascending: false });
@@ -306,7 +310,6 @@ export default function App() {
     }
   };
 
-
   // Helper to map teacher URL paths to activeTab
   const pathParts = location.pathname.split('/').filter(Boolean);
   const teacherActiveTab = pathParts[0] === 'professor' ? (pathParts[1] || 'environments') : 'environments';
@@ -334,80 +337,89 @@ export default function App() {
       />
 
       <main className="app-main-content">
-        <Routes>
-          {/* Root redirect */}
-          <Route path="/" element={<Navigate to="/aluno" replace />} />
+        {authLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '12px' }}>
+            <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-primary)' }} />
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>Verificando autenticação...</span>
+          </div>
+        ) : !user ? (
+          <LoginLanding onLoginSuccess={(userData) => setUser(userData)} />
+        ) : (
+          <Routes>
+            {/* Root redirect */}
+            <Route path="/" element={<Navigate to="/aluno" replace />} />
 
-          {/* Student routes */}
-          <Route
-            path="/aluno"
-            element={
-              <StudentDashboard
-                tracks={tracks}
-                progress={userProgress}
-                onSelectLesson={handleSelectLesson}
-                onOpenSpeaking={() => navigate('/aluno/speaking')}
-              />
-            }
-          />
-          <Route
-            path="/aluno/trilhas"
-            element={<Navigate to="/aluno" replace />}
-          />
-          <Route
-            path="/aluno/speaking"
-            element={<SpeakingLab user={user} />}
-          />
-          <Route
-            path="/aluno/materiais"
-            element={<StudyMaterials />}
-          />
-          <Route
-            path="/aluno/galeria"
-            element={<ExchangeGallery galleryItems={galleryItems} />}
-          />
-
-          <Route
-            path="/aluno/aula"
-            element={
-              defaultLessonContext.lesson ? (
-                <VirtualClassroom
-                  lesson={defaultLessonContext.lesson}
-                  track={defaultLessonContext.track}
-                  module={defaultLessonContext.module}
-                  onBack={() => navigate('/aluno')}
-                  onCompleteLesson={handleCompleteLesson}
-                  isCompleted={!!userProgress[defaultLessonContext.lesson?.id]}
-                />
-              ) : (
-                <Navigate to="/aluno" replace />
-              )
-            }
-          />
-
-          {/* Protected Teacher routes */}
-          <Route
-            path="/professor/*"
-            element={
-              <TeacherGuard user={user} onOpenAuth={() => setIsAuthOpen(true)}>
-                <TeacherDashboard
+            {/* Student routes */}
+            <Route
+              path="/aluno"
+              element={
+                <StudentDashboard
                   tracks={tracks}
-                  setTracks={setTracks}
-                  galleryItems={galleryItems}
-                  setGalleryItems={setGalleryItems}
-                  activeTab={teacherActiveTab}
-                  setActiveTab={handleTeacherTabChange}
+                  progress={userProgress}
+                  onSelectLesson={handleSelectLesson}
+                  onOpenSpeaking={() => navigate('/aluno/speaking')}
                 />
-              </TeacherGuard>
-            }
-          />
+              }
+            />
+            <Route
+              path="/aluno/trilhas"
+              element={<Navigate to="/aluno" replace />}
+            />
+            <Route
+              path="/aluno/speaking"
+              element={<SpeakingLab user={user} />}
+            />
+            <Route
+              path="/aluno/materiais"
+              element={<StudyMaterials />}
+            />
+            <Route
+              path="/aluno/galeria"
+              element={<ExchangeGallery galleryItems={galleryItems} />}
+            />
 
-          {/* Catch-all redirect to /aluno */}
-          <Route path="*" element={<Navigate to="/aluno" replace />} />
-        </Routes>
+            <Route
+              path="/aluno/aula"
+              element={
+                defaultLessonContext.lesson ? (
+                  <VirtualClassroom
+                    lesson={defaultLessonContext.lesson}
+                    track={defaultLessonContext.track}
+                    module={defaultLessonContext.module}
+                    onBack={() => navigate('/aluno')}
+                    onCompleteLesson={handleCompleteLesson}
+                    isCompleted={!!userProgress[defaultLessonContext.lesson?.id]}
+                  />
+                ) : (
+                  <Navigate to="/aluno" replace />
+                )
+              }
+            />
+
+            {/* Protected Teacher routes */}
+            <Route
+              path="/professor/*"
+              element={
+                <TeacherGuard user={user} onOpenAuth={() => setIsAuthOpen(true)}>
+                  <TeacherDashboard
+                    tracks={tracks}
+                    setTracks={setTracks}
+                    galleryItems={galleryItems}
+                    setGalleryItems={setGalleryItems}
+                    activeTab={teacherActiveTab}
+                    setActiveTab={handleTeacherTabChange}
+                  />
+                </TeacherGuard>
+              }
+            />
+
+            {/* Catch-all redirect to /aluno */}
+            <Route path="*" element={<Navigate to="/aluno" replace />} />
+          </Routes>
+        )}
       </main>
 
-      <MobileNav />
+      <MobileNav user={user} />
 
       <AuthModal
         isOpen={isAuthOpen}
@@ -452,7 +464,3 @@ export default function App() {
     </div>
   );
 }
-
-
-
-
