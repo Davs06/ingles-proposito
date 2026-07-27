@@ -34,7 +34,11 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 -- GATILHO AUTOMÁTICO: Popula a tabela public.profiles ao criar usuário em auth.users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
 BEGIN
   INSERT INTO public.profiles (id, email, full_name, avatar_url, docente, role)
   VALUES (
@@ -43,7 +47,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', split_part(NEW.email, '@', 1)),
     COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
     false,      -- Sempre por padrão docente = false
-    'student'::user_role  -- Sempre por padrão role = student
+    'student'::public.user_role  -- Sempre por padrão role = student
   )
   ON CONFLICT (id) DO UPDATE SET
     email = EXCLUDED.email,
@@ -52,9 +56,10 @@ BEGIN
     updated_at = NOW();
   RETURN NEW;
 EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_new_user trigger error: %', SQLERRM;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
@@ -246,38 +251,6 @@ CREATE POLICY "Docente visualiza progresso dos alunos" ON public.user_progress F
 
 CREATE POLICY "Aluno registra própria resposta" ON public.user_answers FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Docente visualiza respostas dos alunos" ON public.user_answers FOR SELECT USING (public.is_teacher_or_admin());
-
--- ==========================================
--- DADOS DE SEED INICIAIS
--- ==========================================
-
-INSERT INTO public.tracks (id, title, description, level, order_index) VALUES
-('11111111-1111-1111-1111-111111111111', 'Inglês Essencial para o Cotidiano', 'Aprenda vocabulário básico e expressões fundamentais para conversação.', 'Iniciante', 1),
-('22222222-2222-2222-2222-222222222222', 'Speaking & Fluência com Americanos', 'Prepare-se para interações reais com voluntários estrangeiros e visitas.', 'Intermediário', 2)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.modules (id, track_id, title, description, order_index) VALUES
-('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'Módulo 1: Apresentação Pessoal & Greetings', 'Como se apresentar, saudações formais e informais.', 1),
-('b2222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222', 'Módulo 1: Cultural Exchange Prep', 'Expressões comuns utilizadas em conversas com nativos.', 1)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.lessons (id, module_id, title, description, youtube_id, pdf_url, duration_minutes, order_index) VALUES
-('c1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', 'Aula 1: Hello & Nice to meet you', 'Aprenda os cumprimentos essenciais em inglês com pronúncia correta.', 'dQw4w9WgXcQ', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 8, 1),
-('c2222222-2222-2222-2222-222222222222', 'a1111111-1111-1111-1111-111111111111', 'Aula 2: Falando sobre sua rotina', 'Uso do Present Simple para descrever atividades diárias.', 'L_LUpnjgPso', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 12, 2),
-('c3333333-3333-3333-3333-333333333333', 'b2222222-2222-2222-2222-222222222222', 'Aula 1: Perguntando sobre Origem e Cultura', 'Como fazer perguntas gentis para visitantes americanos.', '3JZ_D3ELwOQ', 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', 15, 1)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.exercises (id, lesson_id, type, question, options, correct_answer, explanation, order_index) VALUES
-('e1111111-1111-1111-1111-111111111111', 'c1111111-1111-1111-1111-111111111111', 'multiple_choice', 'Qual a forma correta de responder a "Nice to meet you"?', '["Nice to meet you too", "I am fine", "Good morning", "Yes, please"]', 'Nice to meet you too', 'A resposta padrão para "Prazer em conhecê-lo" é "Prazer em conhecê-lo também".', 1),
-('e2222222-2222-2222-2222-222222222222', 'c1111111-1111-1111-1111-111111111111', 'fill_in_blank', 'Preencha a lacuna: "Hello, _____ name is Sarah."', '[]', 'my', 'O pronome possessivo para "eu" (minha) é "my".', 2),
-('e3333333-3333-3333-3333-333333333333', 'c2222222-2222-2222-2222-222222222222', 'multiple_choice', 'Qual frase representa uma ação da rotina?', '["I go to school every day", "I went yesterday", "I will fly tomorrow", "I am sleeping now"]', 'I go to school every day', 'Expressões de frequência como "every day" acompanham o Present Simple.', 1)
-ON CONFLICT DO NOTHING;
-
-INSERT INTO public.gallery_photos (id, title, description, image_url, category, event_date) VALUES
-('f1111111-1111-1111-1111-111111111111', 'Visita da Delegação de Boston', 'Estudantes americanos participando da oficina de conversação na nossa sala de leitura.', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80', 'Visita Americana', '2026-03-15'),
-('f2222222-2222-2222-2222-222222222222', 'Workshop de Pronúncia & Pitching', 'Atividade prática de speaking entre nossos alunos da comunidade e mentores norte-americanos.', 'https://images.unsplash.com/photo-1531545514256-b1400bc00f31?auto=format&fit=crop&w=800&q=80', 'Evento', '2026-04-10'),
-('f3333333-3333-3333-3333-333333333333', 'Certificação da Turma de 2026', 'Entrega de certificados do nível intermediário com a presença dos parceiros sociais.', 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=800&q=80', 'Aula Especial', '2026-06-20')
-ON CONFLICT DO NOTHING;
 
 -- ==========================================
 -- BUCKETS DE STORAGE (SUPABASE S3)

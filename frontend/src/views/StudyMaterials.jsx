@@ -2,38 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { BookOpen, FileText, Image as ImageIcon, Download, ExternalLink, Search, Filter, Sparkles, FolderDown } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
-export const INITIAL_MATERIALS = [
-  {
-    id: 'm1',
-    title: 'Apostila Completa — Inglês Essencial para o Cotidiano',
-    description: 'Guia de aprendizado com vocabulário de saudações, diálogos cotidianos e expressões úteis.',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    file_type: 'pdf',
-    category: 'Apostila',
-    created_at: '2026-03-01'
-  },
-  {
-    id: 'm2',
-    title: 'Guia de Conversação & Speaking com Americanos',
-    description: 'Manual de bolso preparado para os encontros com voluntários e visitantes estrangeiros na PIB.',
-    file_url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    file_type: 'pdf',
-    category: 'Guia Gramatical',
-    created_at: '2026-04-10'
-  },
-  {
-    id: 'm3',
-    title: 'Tabela de Verbos Irregulares & Pronúncia',
-    description: 'Resumo visual e infográfico das formas verbais no passado e particípio mais frequentes.',
-    file_url: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1000&q=80',
-    file_type: 'image',
-    category: 'Vocabulário',
-    created_at: '2026-05-15'
-  }
-];
+export const INITIAL_MATERIALS = [];
 
 export default function StudyMaterials() {
-  const [materials, setMaterials] = useState(INITIAL_MATERIALS);
+  const [materials, setMaterials] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [previewMaterial, setPreviewMaterial] = useState(null);
@@ -47,7 +19,7 @@ export default function StudyMaterials() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (data && data.length > 0) {
+        if (data) {
           setMaterials(data);
         }
       } catch (err) {

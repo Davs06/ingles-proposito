@@ -49,8 +49,17 @@ export default function ExchangeGallery({ galleryItems }) {
       </div>
 
       {/* Image Grid */}
-      <div className="grid-responsive">
-        {filteredItems.map((photo) => (
+      {filteredItems.length === 0 ? (
+        <div className="glass-panel" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          <ImageIcon size={36} color="var(--text-muted)" style={{ marginBottom: '10px' }} />
+          <h4 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>Nenhuma foto cadastrada na galeria</h4>
+          <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+            Fotos de visitas e eventos da escola serão publicadas aqui.
+          </p>
+        </div>
+      ) : (
+        <div className="grid-responsive">
+          {filteredItems.map((photo) => (
           <div
             key={photo.id}
             onClick={() => setActivePhoto(photo)}
@@ -106,7 +115,8 @@ export default function ExchangeGallery({ galleryItems }) {
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Lightbox Modal */}
       {activePhoto && (

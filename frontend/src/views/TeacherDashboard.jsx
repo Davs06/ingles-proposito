@@ -7,7 +7,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { uploadImageToSupabase, uploadFileToSupabase, supabase, isSupabaseConfigured } from '../services/supabaseClient';
-import { INITIAL_MATERIALS } from './StudyMaterials';
 
 export default function TeacherDashboard({ 
   tracks, 
@@ -53,7 +52,7 @@ export default function TeacherDashboard({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Form states for PDF Booklet & Materials Upload
-  const [materialsList, setMaterialsList] = useState(INITIAL_MATERIALS);
+  const [materialsList, setMaterialsList] = useState([]);
   const [newMatTitle, setNewMatTitle] = useState('');
   const [newMatDesc, setNewMatDesc] = useState('');
   const [newMatCategory, setNewMatCategory] = useState('Apostila');
@@ -66,7 +65,7 @@ export default function TeacherDashboard({
       if (!isSupabaseConfigured()) return;
       try {
         const { data } = await supabase.from('materials').select('*').order('created_at', { ascending: false });
-        if (data && data.length > 0) setMaterialsList(data);
+        if (data) setMaterialsList(data);
       } catch (err) {
         console.warn('Erro ao carregar materiais no painel docente:', err);
       }
@@ -74,15 +73,35 @@ export default function TeacherDashboard({
     loadMat();
   }, []);
 
+  // Fetch real Students from profiles table in Supabase
+  const [students, setStudents] = useState([]);
 
-  // Mock Students data for Environment 4 (Gestão de Alunos)
-  const [students, setStudents] = useState([
-    { id: 's1', name: 'Ana Clara Silva', email: 'ana.silva@email.com', progress: 85, speakingScore: 92, status: 'Ativo' },
-    { id: 's2', name: 'Lucas Gabriel Santos', email: 'lucas.santos@email.com', progress: 60, speakingScore: 78, status: 'Ativo' },
-    { id: 's3', name: 'Mariana Oliveira', email: 'mariana.o@email.com', progress: 100, speakingScore: 95, status: 'Concluído' },
-    { id: 's4', name: 'Matheus Pereira', email: 'matheus.p@email.com', progress: 40, speakingScore: 70, status: 'Ativo' },
-    { id: 's5', name: 'Beatriz Lima', email: 'beatriz.l@email.com', progress: 15, speakingScore: 65, status: 'Em Risco' }
-  ]);
+  React.useEffect(() => {
+    async function loadStudentsFromDb() {
+      if (!isSupabaseConfigured()) return;
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, role, docente, created_at')
+          .eq('role', 'student');
+        if (data) {
+          setStudents(
+            data.map((st) => ({
+              id: st.id,
+              name: st.full_name || st.email.split('@')[0],
+              email: st.email,
+              progress: 0,
+              speakingScore: 0,
+              status: 'Ativo'
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Erro ao carregar alunos do banco:', err);
+      }
+    }
+    loadStudentsFromDb();
+  }, []);
 
   const allLessons = tracks.flatMap((t) => t.modules.flatMap((m) => m.lessons));
 

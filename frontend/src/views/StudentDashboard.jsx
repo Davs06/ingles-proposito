@@ -102,7 +102,16 @@ export default function StudentDashboard({ tracks, progress, onSelectLesson, onO
           <BookOpen size={18} color="var(--accent-primary)" /> Trilhas de Ensino Disponíveis
         </h3>
 
-        {tracks.map((track) => (
+        {tracks.length === 0 ? (
+          <div className="glass-panel" style={{ padding: '30px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            <BookOpen size={36} color="var(--text-muted)" style={{ marginBottom: '10px' }} />
+            <h4 style={{ fontSize: '1.05rem', color: 'var(--text-primary)' }}>Nenhuma trilha de ensino disponível no momento</h4>
+            <p style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+              Novos módulos e aulas serão disponibilizados em breve pelo corpo docente.
+            </p>
+          </div>
+        ) : (
+          tracks.map((track) => (
           <div key={track.id} className="glass-panel" style={{ padding: '18px' }}>
             <div style={{ marginBottom: '14px' }}>
               <span className="tag tag-blue" style={{ marginBottom: '4px' }}>Nível: {track.level}</span>
@@ -178,7 +187,8 @@ export default function StudentDashboard({ tracks, progress, onSelectLesson, onO
               ))}
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
   );

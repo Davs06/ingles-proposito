@@ -149,12 +149,10 @@ export default function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
 
-  const [tracks, setTracks] = useState(INITIAL_TRACKS);
-  const [galleryItems, setGalleryItems] = useState(INITIAL_GALLERY);
+  const [tracks, setTracks] = useState([]);
+  const [galleryItems, setGalleryItems] = useState([]);
 
-  const [userProgress, setUserProgress] = useState({
-    'c1111111-1111-1111-1111-111111111111': true
-  });
+  const [userProgress, setUserProgress] = useState({});
 
   const [activeLessonContext, setActiveLessonContext] = useState(null);
 
@@ -191,7 +189,7 @@ export default function App() {
           .select('*')
           .order('created_at', { ascending: false });
 
-        if (data && data.length > 0) {
+        if (data) {
           setGalleryItems(data);
         }
       } catch (err) {
@@ -211,7 +209,7 @@ export default function App() {
           .select('*, modules(*, lessons(*, exercises(*)))')
           .order('order_index', { ascending: true });
 
-        if (dbTracks && dbTracks.length > 0) {
+        if (dbTracks) {
           const formattedTracks = dbTracks.map((t) => ({
             ...t,
             modules: (t.modules || [])
