@@ -1,0 +1,34 @@
+name: Deploy via SSH
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploying application via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script: |
+            # Navega até a pasta do projeto (Ajuste o caminho conforme o seu servidor)
+            cd /caminho/para/ingles-proposito
+            
+            # Atualiza o código fonte do GitHub
+            git fetch --all
+            git reset --hard origin/main
+            git pull origin main
+            
+            # Reconstrói e sobe os containers em background usando o compose de produção
+            docker compose -f compose.prod.yaml up -d --build
+            
+            # Limpa imagens antigas e não utilizadas para economizar espaço (opcional)
+            docker image prune -f
