@@ -1,4 +1,4 @@
-name: Deploy via SSH
+name: CI/CD Ingles Proposito
 
 on:
   push:
@@ -6,29 +6,48 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: Deploy to VPS
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploying application via SSH
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Login no Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build e Push do Backend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/ingles-proposito-backend:latest
+
+      - name: Build e Push do Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/ingles-proposito-frontend:latest
+          build-args: |
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Deploy no Servidor (VPS)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SSH_PORT || '22' }}
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
           script: |
-            # Navega até a pasta do projeto (Ajuste o caminho conforme o seu servidor)
+            # Altere este caminho para a pasta real do seu servidor
             cd /caminho/para/ingles-proposito
             
-            # Atualiza o código fonte do GitHub
-            git fetch --all
-            git reset --hard origin/main
-            git pull origin main
+            # Puxa as imagens atualizadas do Docker Hub
+            docker compose -f compose.prod.yaml pull
             
-            # Reconstrói e sobe os containers em background usando o compose de produção
-            docker compose -f compose.prod.yaml up -d --build
-            
-            # Limpa imagens antigas e não utilizadas para economizar espaço (opcional)
-            docker image prune -f
+            # Sobe os containers atualizados
+            docker compose -f compose.prod.yaml up -d --remove-orphans
