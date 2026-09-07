@@ -88,51 +88,27 @@ function TeacherGuard({ user, onOpenAuth, children }) {
 
   // Restricted Access Guard UI
   return (
-    <div
-      className="glass-panel animate-fade-in"
-      style={{
-        padding: '36px 24px',
-        maxWidth: '560px',
-        margin: '40px auto',
-        textAlign: 'center',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '16px'
-      }}
-    >
-      <div
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: 'rgba(239, 68, 68, 0.15)',
-          color: '#ef4444',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: '4px'
-        }}
-      >
+    <div className="glass-panel animate-fade-in px-6 py-9 max-w-[560px] mx-auto text-center flex flex-col items-center gap-4 my-10">
+      <div className="w-[60px] h-[60px] rounded-full bg-orange-600/15 text-orange-600 flex items-center justify-center mb-1">
         <Lock size={28} />
       </div>
 
-      <h2 style={{ fontSize: '1.4rem' }}>Acesso Restrito ao Corpo Docente</h2>
-      <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.5' }}>
+      <h2 className="text-[1.4rem]">Acesso Restrito ao Corpo Docente</h2>
+      <p className="text-secondary text-[0.88rem] leading-relaxed">
         A área de gestão (<strong>/professor</strong>) é exclusiva para professores e administradores autorizados no banco de dados.
       </p>
 
       {user ? (
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-secondary)', padding: '8px 14px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
+        <div className="text-[0.8rem] text-muted bg-secondary py-2 px-3.5 rounded-sm border border-border">
           Conectado como <strong>{user.full_name || user.email}</strong> (Perfil atual: <em>Estudante</em>). Para se tornar um docente, solicite a alteração do campo <code>docente = true</code> no sistema.
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center', marginTop: '10px', width: '100%' }}>
-        <button onClick={onOpenAuth} className="btn btn-primary btn-sm" style={{ padding: '8px 16px' }}>
+      <div className="flex flex-wrap gap-2.5 justify-center mt-2.5 w-full">
+        <button onClick={onOpenAuth} className="btn btn-primary btn-sm px-4 py-2">
           <Shield size={15} /> Autenticar como Professor
         </button>
-        <button onClick={() => navigate('/aluno')} className="btn btn-secondary btn-sm" style={{ padding: '8px 16px' }}>
+        <button onClick={() => navigate('/aluno')} className="btn btn-secondary btn-sm px-4 py-2">
           Voltar para Área do Aluno
         </button>
       </div>
@@ -147,7 +123,6 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
 
   const [tracks, setTracks] = useState([]);
   const [galleryItems, setGalleryItems] = useState([]);
@@ -271,16 +246,6 @@ export default function App() {
     navigate('/aluno');
   };
 
-  const toggleTheme = () => {
-    const nextTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    if (nextTheme === 'light') {
-      document.body.classList.add('light-theme');
-    } else {
-      document.body.classList.remove('light-theme');
-    }
-  };
-
   const handleSelectLesson = (lesson, track, module) => {
     setActiveLessonContext({ lesson, track, module });
     navigate('/aluno/aula');
@@ -332,15 +297,13 @@ export default function App() {
         user={user}
         onOpenAuth={() => setIsAuthOpen(true)}
         onLogout={handleLogout}
-        theme={theme}
-        toggleTheme={toggleTheme}
       />
 
       <main className="app-main-content">
         {authLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '12px' }}>
-            <Loader2 size={32} className="animate-spin" style={{ color: 'var(--accent-primary)' }} />
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>Verificando autenticação...</span>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+            <Loader2 size={32} className="animate-spin text-accent-primary" />
+            <span className="text-[0.88rem] text-muted">Verificando autenticação...</span>
           </div>
         ) : !user ? (
           <LoginLanding onLoginSuccess={(userData) => setUser(userData)} />

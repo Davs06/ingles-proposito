@@ -332,8 +332,8 @@ export default function SpeakingLab() {
                   width: '72px',
                   height: '72px',
                   borderRadius: '50%',
-                  border: isListening ? '3px solid #ef4444' : 'none',
-                  background: isListening ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 'linear-gradient(135deg, var(--accent-purple), var(--accent-primary))',
+                  border: isListening ? '3px solid var(--accent-warning)' : 'none',
+                  background: isListening ? 'linear-gradient(135deg, var(--accent-warning), #dc2626)' : 'linear-gradient(135deg, var(--accent-purple), var(--accent-primary))',
                   color: '#fff',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -351,7 +351,7 @@ export default function SpeakingLab() {
                 <Mic size={30} />
               </button>
 
-              <div style={{ fontSize: '0.85rem', color: isListening ? '#ef4444' : 'var(--text-primary)', fontWeight: '700' }}>
+              <div style={{ fontSize: '0.85rem', color: isListening ? 'var(--accent-warning)' : 'var(--text-primary)', fontWeight: '700' }}>
                 {isListening ? '🔴 Gravação ativa — Solte o botão quando terminar!' : '👆 SEGURE o botão para falar'}
               </div>
 

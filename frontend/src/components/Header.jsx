@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { BookOpen, User, Sun, Moon, Shield, LogOut, Bell, CheckCheck, Sparkles } from 'lucide-react';
+import { BookOpen, User, Shield, LogOut, Bell, CheckCheck, Sparkles } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 
 const INITIAL_NOTIFS = [
@@ -13,7 +13,7 @@ const INITIAL_NOTIFS = [
   }
 ];
 
-export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme }) {
+export default function Header({ user, onOpenAuth, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isTeacher = location.pathname.startsWith('/professor');
@@ -119,7 +119,7 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
 
   return (
     <header className="top-navbar">
-      <Link to="/aluno" style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none', color: 'inherit' }}>
+      <Link to="/aluno" className="flex items-center gap-2.5 no-underline text-inherit">
         <img
           src="/proposito do ingles.jpg"
           alt="Propósito do Inglês Logo"
@@ -129,44 +129,24 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
               e.target.nextSibling.style.display = 'flex';
             }
           }}
-          style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            objectFit: 'cover',
-            flexShrink: 0
-          }}
+          className="w-[38px] h-[38px] rounded-[10px] object-cover shrink-0"
         />
-        <div 
-          style={{ 
-            width: '36px', 
-            height: '36px', 
-            borderRadius: '10px', 
-            background: 'linear-gradient(135deg, #2563eb, #8b5cf6)', 
-            display: 'none', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            color: '#fff',
-            fontWeight: '800',
-            fontSize: '1.1rem',
-            flexShrink: 0
-          }}
-        >
+        <div className="w-[36px] h-[36px] rounded-[10px] bg-gradient-to-br from-blue-600 to-purple-500 hidden items-center justify-center text-white font-extrabold text-[1.1rem] shrink-0">
           PI
         </div>
-        <div style={{ minWidth: 0 }}>
+        <div className="min-w-0">
           <h1 className="brand-title-heading">
-            Propósito do <span style={{ color: 'var(--accent-primary)' }}>Inglês</span>
+            Propósito do <span className="text-accent-primary">Inglês</span>
           </h1>
-          <div className="brand-subtitle" style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: '700', whiteSpace: 'nowrap' }}>
+          <div className="brand-subtitle text-[0.62rem] text-muted uppercase tracking-[0.06em] font-bold whitespace-nowrap">
             PIB São Miguel Paulista
           </div>
         </div>
 
       </Link>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', position: 'relative', flexShrink: 0 }}>
-        <div className="nav-role-switcher" style={{ background: 'var(--bg-secondary)', padding: '3px', borderRadius: 'var(--radius-full)', border: '1px solid var(--border-color)', display: 'flex', gap: '2px' }}>
+      <div className="flex items-center gap-1.5 relative shrink-0">
+        <div className="nav-role-switcher bg-secondary p-[3px] rounded-full border border-border flex gap-[2px]">
 
           <button
             onClick={() => navigate('/aluno')}
@@ -203,7 +183,7 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
                   position: 'absolute',
                   top: '-2px',
                   right: '-2px',
-                  background: '#ef4444',
+                  background: 'var(--accent-warning)',
                   color: '#fff',
                   fontSize: '0.62rem',
                   fontWeight: '800',
@@ -281,15 +261,6 @@ export default function Header({ user, onOpenAuth, onLogout, theme, toggleTheme 
 
           )}
         </div>
-
-        <button 
-          onClick={toggleTheme} 
-          className="btn btn-secondary btn-sm"
-          style={{ width: '34px', height: '34px', minHeight: '34px', padding: 0, borderRadius: '50%', flexShrink: 0 }}
-          title="Alternar Tema"
-        >
-          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-        </button>
 
 
         {user ? (

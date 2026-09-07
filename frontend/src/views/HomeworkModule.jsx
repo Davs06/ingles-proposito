@@ -109,7 +109,7 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
                   border = 'var(--accent-success)';
                   bg = 'var(--accent-success-bg)';
                 } else if (isSelected && !isCorrect) {
-                  border = '#ef4444';
+                  border = 'var(--accent-warning)';
                   bg = 'rgba(239, 68, 68, 0.12)';
                 }
               } else if (isSelected) {
@@ -205,16 +205,16 @@ export default function HomeworkModule({ exercises, onCompleteHomework }) {
                 padding: '14px',
                 borderRadius: 'var(--radius-md)',
                 background: isCorrect ? 'var(--accent-success-bg)' : 'rgba(239, 68, 68, 0.12)',
-                border: `1px solid ${isCorrect ? 'var(--accent-success)' : '#ef4444'}`
+                border: `1px solid ${isCorrect ? 'var(--accent-success)' : 'var(--accent-warning)'}`
               }}
             >
               {isCorrect ? (
                 <CheckCircle2 size={20} color="var(--accent-success)" style={{ flexShrink: 0, marginTop: '2px' }} />
               ) : (
-                <XCircle size={20} color="#ef4444" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <XCircle size={20} color="var(--accent-warning)" style={{ flexShrink: 0, marginTop: '2px' }} />
               )}
               <div style={{ flex: 1 }}>
-                <strong style={{ fontSize: '0.9rem', color: isCorrect ? 'var(--accent-success)' : '#ef4444', display: 'block', marginBottom: '4px' }}>
+                <strong style={{ fontSize: '0.9rem', color: isCorrect ? 'var(--accent-success)' : 'var(--accent-warning)', display: 'block', marginBottom: '4px' }}>
                   {currentEx.type === 'discursive'
                     ? 'Resposta Registrada!'
                     : isCorrect ? 'Resposta Correta!' : 'Resposta Incorreta.'}
